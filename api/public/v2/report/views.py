@@ -34,14 +34,13 @@ class ReportMixin:
             self.kwargs["owner_username"],
             self.kwargs["repo_name"],
         )
-        commit_file_url = dashboard_commit_file_url(
+        return dashboard_commit_file_url(
             path=path,
             service=service,
             owner=owner,
             repo=repo,
             commit_sha=commit.commitid,
         )
-        return commit_file_url
 
 
 @extend_schema(
@@ -314,26 +313,25 @@ class FileReportViewSet(
 
         oldest_sha = self.request.query_params.get("oldest_sha")
 
-        for i in range(walk_back):
+        for _ in range(walk_back):
             if self._is_valid_commit(self.commit) and self._is_valid_report(
                 report, self.path
             ):
                 break
-            else:
-                # walk commit ancestors until we find coverage info for the given path
-                if not self.commit.parent_commit_id:
-                    report = None
-                    break
-                self.commit = self.repo.commits.filter(
-                    commitid=self.commit.parent_commit_id
-                ).first()
-                if not self.commit:
-                    report = None
-                    break
-                report = self.commit.full_report
+            # walk commit ancestors until we find coverage info for the given path
+            if not self.commit.parent_commit_id:
+                report = None
+                break
+            self.commit = self.repo.commits.filter(
+                commitid=self.commit.parent_commit_id
+            ).first()
+            if not self.commit:
+                report = None
+                break
+            report = self.commit.full_report
 
-                if oldest_sha and oldest_sha == self.commit.commitid:
-                    break
+            if oldest_sha and oldest_sha == self.commit.commitid:
+                break
 
         if not self._is_valid_report(report, self.path):
             raise NotFound(f"coverage info not found for path '{self.path}'")
@@ -371,7 +369,4 @@ class FileReportViewSet(
             return False
 
         report_file = report.get(path)
-        if report_file is None:
-            return False
-
-        return True
+        return report_file is not None

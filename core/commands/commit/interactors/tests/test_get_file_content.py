@@ -55,4 +55,4 @@ class GetFileContentInteractorTest(TransactionTestCase):
             response_data=404, message="not found"
         )
         file_content = await self.execute(None, self.commit, "path")
-        assert file_content == None
+        assert file_content is None

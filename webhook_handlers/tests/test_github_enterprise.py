@@ -134,8 +134,8 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
 
         self.repo.refresh_from_db()
 
-        assert self.repo.private == False
-        assert self.repo.activated == False
+        assert not self.repo.private
+        assert not self.repo.activated
 
     def test_repository_privatized_sets_private_true(self):
         self.repo.private = False
@@ -150,7 +150,7 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
 
         self.repo.refresh_from_db()
 
-        assert self.repo.private == True
+        assert self.repo.private
 
     def test_repository_deleted_sets_deleted_activated_and_active(self):
         repository_id = self.repo.repoid
@@ -172,7 +172,7 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.DELETE,
             data={
-                "ref": "refs/heads/" + branch.name,
+                "ref": f"refs/heads/{branch.name}",
                 "ref_type": "branch",
                 "repository": {"id": self.repo.service_id},
             },
@@ -211,12 +211,15 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + unmerged_branch_name,
+                "ref": f"refs/heads/{unmerged_branch_name}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
                     {"id": commit1.commitid, "message": commit1.message},
                     {"id": commit2.commitid, "message": commit2.message},
-                    {"id": merged_commit.commitid, "message": merged_commit.message},
+                    {
+                        "id": merged_commit.commitid,
+                        "message": merged_commit.message,
+                    },
                 ],
             },
         )
@@ -247,12 +250,15 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + repo_branch,
+                "ref": f"refs/heads/{repo_branch}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
                     {"id": commit1.commitid, "message": commit1.message},
                     {"id": commit2.commitid, "message": commit2.message},
-                    {"id": merged_commit.commitid, "message": merged_commit.message},
+                    {
+                        "id": merged_commit.commitid,
+                        "message": merged_commit.message,
+                    },
                 ],
             },
         )
@@ -277,10 +283,13 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + branch_name,
+                "ref": f"refs/heads/{branch_name}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
-                    {"id": unmerged_commit.commitid, "message": unmerged_commit.message}
+                    {
+                        "id": unmerged_commit.commitid,
+                        "message": unmerged_commit.message,
+                    }
                 ],
             },
         )
@@ -302,7 +311,7 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + unmerged_branch_name,
+                "ref": f"refs/heads/{unmerged_branch_name}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
                     {"id": commit1.commitid, "message": commit1.message},
@@ -528,12 +537,12 @@ class GithubEnterpriseWebhookHandlerTests(APITestCase):
             repo1.refresh_from_db()
             repo2.refresh_from_db()
 
-            assert owner.integration_id == None
-            assert repo1.using_integration == False
-            assert repo2.using_integration == False
+            assert owner.integration_id is None
+            assert not repo1.using_integration
+            assert not repo2.using_integration
 
-            assert repo1.bot == None
-            assert repo2.bot == None
+            assert repo1.bot is None
+            assert repo2.bot is None
 
     @patch(
         "services.task.TaskService.refresh",

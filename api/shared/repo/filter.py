@@ -17,7 +17,7 @@ class StringListFilter(django_filters.Filter):
 
         values = request.GET.getlist(self.query_param)
         if len(values) > 0:
-            return qs.filter(**{"%s__%s" % (self.field_name, self.lookup_expr): values})
+            return qs.filter(**{f"{self.field_name}__{self.lookup_expr}": values})
 
         return qs
 

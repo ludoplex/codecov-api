@@ -12,7 +12,7 @@ def to_drf_datetime_str(datetime):
     """
     value = datetime.isoformat()
     if value.endswith("+00:00"):
-        value = value[:-6] + "Z"
+        value = f"{value[:-6]}Z"
     return value
 
 

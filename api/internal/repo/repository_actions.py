@@ -48,8 +48,7 @@ def create_webhook_on_provider(repository_service, repo):
     webhook_url = settings.WEBHOOK_URL
 
     log.info(
-        "Resetting webhook with webhook url: %s"
-        % f"{webhook_url}/webhooks/{repository_service.service}"
+        f"Resetting webhook with webhook url: {webhook_url}/webhooks/{repository_service.service}"
     )
 
     return async_to_sync(repository_service.post_webhook)(

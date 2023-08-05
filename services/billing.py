@@ -175,12 +175,10 @@ class StripeService(AbstractPaymentService):
             return None
 
         subscription = self.get_subscription(owner)
-        subscription_schedule_id = subscription.schedule
-
-        if not subscription_schedule_id:
+        if subscription_schedule_id := subscription.schedule:
+            return stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
+        else:
             return None
-
-        return stripe.SubscriptionSchedule.retrieve(subscription_schedule_id)
 
     @_log_stripe_error
     def modify_subscription(self, owner, desired_plan):
@@ -193,7 +191,7 @@ class StripeService(AbstractPaymentService):
         # An increase in seats and/or plan implies the user is upgrading, hence 'is_upgrading' is a consequence
         # of proration_behavior providing an invoice, in this case, != "none"
         # TODO: change this to "self._is_upgrading_seats(owner, desired_plan) or self._is_extending_term(owner, desired_plan)"
-        is_upgrading = True if proration_behavior != "none" else False
+        is_upgrading = proration_behavior != "none"
 
         # Divide logic bw immediate updates and scheduled updates
         # Immediate updates: when user upgrades seats or plan
@@ -239,19 +237,15 @@ class StripeService(AbstractPaymentService):
                     f"Stripe subscription modified successfully for owner {owner.ownerid} by user #{self.requesting_user.ownerid}"
                 )
         else:
-            if subscription_schedule_id:
-                self._modify_subscription_schedule(
-                    owner, subscription, subscription_schedule_id, desired_plan
-                )
-            else:
+            if not subscription_schedule_id:
                 schedule = stripe.SubscriptionSchedule.create(
                     from_subscription=owner.stripe_subscription_id
                 )
                 subscription_schedule_id = schedule.id
 
-                self._modify_subscription_schedule(
-                    owner, subscription, subscription_schedule_id, desired_plan
-                )
+            self._modify_subscription_schedule(
+                owner, subscription, subscription_schedule_id, desired_plan
+            )
 
     def _segment_modify_subscription(self, owner, desired_plan):
         if owner.plan != desired_plan["value"]:

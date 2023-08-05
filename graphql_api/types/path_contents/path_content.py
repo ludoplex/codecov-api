@@ -15,9 +15,7 @@ path_content_file_bindable = ObjectType("PathContentFile")
 def resolve_path_content_type(obj, *_):
     if isinstance(obj, File):
         return "PathContentFile"
-    if isinstance(obj, Dir):
-        return "PathContentDir"
-    return None
+    return "PathContentDir" if isinstance(obj, Dir) else None
 
 
 @path_content_bindable.field("name")

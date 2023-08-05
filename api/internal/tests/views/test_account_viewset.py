@@ -36,8 +36,7 @@ class MockSubscription(object):
         self.collection_method = subscription_params["collection_method"]
         self.trial_end = subscription_params.get("trial_end")
 
-        customer_coupon = subscription_params.get("customer_coupon")
-        if customer_coupon:
+        if customer_coupon := subscription_params.get("customer_coupon"):
             self.customer["discount"] = {"coupon": customer_coupon}
 
     def __getitem__(self, key):
@@ -611,7 +610,7 @@ class AccountViewSetTests(APITestCase):
 
         self.current_owner.refresh_from_db()
 
-        assert self.current_owner.plan_auto_activate is True
+        assert self.current_owner.plan_auto_activate
         assert response.data["plan_auto_activate"] is True
 
     def test_update_can_set_plan_auto_activate_to_false(self):
@@ -630,7 +629,7 @@ class AccountViewSetTests(APITestCase):
 
         self.current_owner.refresh_from_db()
 
-        assert self.current_owner.plan_auto_activate is False
+        assert not self.current_owner.plan_auto_activate
         assert response.data["plan_auto_activate"] is False
 
     def test_update_can_set_plan_to_users_basic(self):
@@ -1183,7 +1182,7 @@ class AccountViewSetTests(APITestCase):
         assert not modify_customer_mock.called
         assert not coupon_create_mock.called
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()["subscription_detail"]["customer"]["discount"] == None
+        assert response.json()["subscription_detail"]["customer"]["discount"] is None
 
     @patch("services.task.TaskService.delete_owner")
     def test_destroy_triggers_delete_owner_task(self, delete_owner_mock):

@@ -278,25 +278,13 @@ class RepositoryQuerySet(QuerySet):
             name=git_repo["name"],
         )
 
-        # If this is a fork, create the forked repo and save it to the new repo.
-        # Depending on the source of this data, 'fork' may either be a boolean or a dict
-        # containing data of the fork. In the case it is a boolean, the forked repo's data
-        # is contained in the 'parent' field.
-        fork = git_repo.get("fork")
-        if fork:
+        if fork := git_repo.get("fork"):
             if isinstance(fork, dict):
                 git_repo_fork = git_repo["fork"]["repo"]
                 git_repo_fork_owner = git_repo["fork"]["owner"]
 
             elif isinstance(fork, bool):
-                # This is supposed to indicate that the repo json comes
-                # in the form of a github API repo
-                # (https://docs.github.com/en/rest/reference/repos#get-a-repository)
-                # but sometimes this will unexpectedly be missing the 'parent' field,
-                # which contains information about a fork's parent. So we check again
-                # below.
-                parent = git_repo.get("parent")
-                if parent:
+                if parent := git_repo.get("parent"):
                     git_repo_fork_owner = {
                         "service_id": parent["owner"]["id"],
                         "username": parent["owner"]["login"],

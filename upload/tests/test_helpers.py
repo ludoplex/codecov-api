@@ -83,7 +83,7 @@ def test_check_commit_constraints_settings_disabled(db, settings):
     third_commit = CommitFactory.create(repository__author=repository.author)
     unrelated_commit = CommitFactory.create()
     report = CommitReportFactory.create(commit=first_commit)
-    for i in range(300):
+    for _ in range(300):
         UploadFactory.create(report=report)
     # no commit should be throttled
     check_commit_upload_constraints(first_commit)
@@ -106,11 +106,11 @@ def test_check_commit_constraints_settings_enabled(db, settings):
     first_report = CommitReportFactory.create(commit=first_commit)
     fourth_report = CommitReportFactory.create(commit=fourth_commit)
     check_commit_upload_constraints(second_commit)
-    for i in range(300):
+    for _ in range(300):
         UploadFactory.create(report__commit__repository=public_repository)
     # ensuring public repos counts don't count torwards the quota
     check_commit_upload_constraints(second_commit)
-    for i in range(150):
+    for _ in range(150):
         UploadFactory.create(report=first_report)
         UploadFactory.create(report=fourth_report)
     # first and fourth commit already has uploads made, we won't block uploads to them
@@ -144,7 +144,7 @@ def test_validate_upload_too_many_uploads_for_commit(
     repo = RepositoryFactory.create(author=owner)
     commit = CommitFactory.create(totals={"s": totals_column_count}, repository=repo)
     report = CommitReportFactory.create(commit=commit)
-    for i in range(rows_count):
+    for _ in range(rows_count):
         UploadFactory.create(report=report)
     with pytest.raises(ValidationError) if should_raise else nullcontext():
         validate_upload({"commit": commit.commitid}, repo, redis)

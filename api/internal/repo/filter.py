@@ -60,9 +60,7 @@ class RepositoryOrderingFilter(filters.OrderingFilter):
         return queryset.annotate(**annotation_args).order_by(ordering_field)
 
     def filter_queryset(self, request, queryset, view):
-        ordering = self.get_ordering(request, queryset, view)
-
-        if ordering:
+        if ordering := self.get_ordering(request, queryset, view):
             for ordering_field in ordering:
                 queryset = self._order_by_totals_field(ordering_field, queryset)
         return queryset

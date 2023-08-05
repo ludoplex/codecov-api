@@ -11,8 +11,7 @@ class FetchRepoBranchesInteractor(BaseInteractor):
         queryset = repository.branches.all()
 
         filters = filters or {}
-        search_value = filters.get("search_value")
-        if search_value:
+        if search_value := filters.get("search_value"):
             queryset = queryset.filter(name__icontains=search_value)
 
         merged = filters.get("merged_branches", False)

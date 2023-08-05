@@ -179,11 +179,9 @@ class GitLabWebhookHandler(APIView):
             owner_username, repo_name = self.request.data.get(
                 "path_with_namespace"
             ).split("/")
-            new_owner = Owner.objects.filter(
+            if new_owner := Owner.objects.filter(
                 service=self.service_name, username=owner_username
-            ).first()
-
-            if new_owner:
+            ).first():
                 repo.author = new_owner
                 repo.name = repo_name
                 repo.save(update_fields=["author", "name"])
@@ -203,25 +201,22 @@ class GitLabWebhookHandler(APIView):
             event_name in ("user_add_to_team", "user_remove_from_team")
             and self.request.data.get("project_visibility") == "private"
         ):
-            user = Owner.objects.filter(
+            if user := Owner.objects.filter(
                 service=self.service_name,
                 service_id=self.request.data.get("user_id"),
                 oauth_token__isnull=False,
-            ).first()
-
-            if user:
+            ).first():
                 if event_name == "user_add_to_team":
                     user.permission = list(
                         set((user.permission or []) + [int(repo.repoid)])
                     )
-                    user.save(update_fields=["permission"])
                     message = "Permission added"
                 else:
                     new_permissions = set((user.permission or []))
                     new_permissions.remove(int(repo.repoid))
                     user.permission = list(new_permissions)
-                    user.save(update_fields=["permission"])
                     message = "Permission removed"
+                user.save(update_fields=["permission"])
             else:
                 message = "User not found or not active"
 

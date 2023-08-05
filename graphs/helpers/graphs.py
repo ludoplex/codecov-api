@@ -110,7 +110,7 @@ def icicle(parsed_data, **kwargs):
         if total > 0:
             for item in items:
                 item_width = item["lines"] / total * max_width
-                title = prefix_name + "/" + item["name"]
+                title = f"{prefix_name}/" + item["name"]
                 svg_elements.append(
                     _svg_rect(
                         x,

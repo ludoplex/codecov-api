@@ -10,7 +10,7 @@ from graphql_api.types.enums import OrderingDirection
 
 
 def build_connection_graphql(connection_name, type_node):
-    edge_name = connection_name + "Edge"
+    edge_name = f"{connection_name}Edge"
     return f"""
         type {connection_name} {{
           edges: [{edge_name}]

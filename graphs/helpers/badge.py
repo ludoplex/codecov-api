@@ -21,13 +21,10 @@ def get_badge(coverage, coverage_range, precision):
         # Get color for badge
         color = coverage_to_color(*coverage_range)(coverage)
         # Use medium badge to fit coverage of 100%
-        if float(coverage) == 100:
+        if float(coverage) == 100 or precision != 0 and precision == 1:
             badge = medium_badge
-        # Use badge size based on precision (0 = small, 1 = medium, 2 = large)
         elif precision == 0:
             badge = small_badge
-        elif precision == 1:
-            badge = medium_badge
         else:
             badge = large_badge
     else:

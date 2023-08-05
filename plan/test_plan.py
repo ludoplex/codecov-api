@@ -148,7 +148,7 @@ class PlanServiceTests(TestCase):
         assert plan_service.billing_rate == trial_plan.billing_rate
         assert plan_service.base_unit_price == trial_plan.base_unit_price
         assert plan_service.benefits == trial_plan.benefits
-        assert plan_service.monthly_uploads_limit == None  # Not 250 since it's trialing
+        assert plan_service.monthly_uploads_limit is None
         assert plan_service.trial_total_days == trial_plan.trial_days
 
     def test_plan_service_sets_default_plan_data_values_correctly(self):
@@ -166,5 +166,5 @@ class PlanServiceTests(TestCase):
 
         assert current_org.plan == PlanName.BASIC_PLAN_NAME.value
         assert current_org.plan_user_count == 1
-        assert current_org.plan_activated_users == None
-        assert current_org.stripe_subscription_id == None
+        assert current_org.plan_activated_users is None
+        assert current_org.stripe_subscription_id is None

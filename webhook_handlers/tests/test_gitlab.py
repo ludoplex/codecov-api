@@ -17,9 +17,10 @@ from webhook_handlers.constants import (
 
 
 def get_config_mock(*args, **kwargs):
-    if args == ("setup", "enterprise_license"):
-        return True
-    elif args == ("gitlab", "webhook_validation"):
+    if args in [
+        ("setup", "enterprise_license"),
+        ("gitlab", "webhook_validation"),
+    ]:
         return True
     else:
         return kwargs.get("default")

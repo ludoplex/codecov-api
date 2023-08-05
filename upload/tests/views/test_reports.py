@@ -25,7 +25,7 @@ def test_reports_post(client, db, mocker):
     commit = CommitFactory(repository=repository)
     repository.save()
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="token " + repository.upload_token)
+    client.credentials(HTTP_AUTHORIZATION=f"token {repository.upload_token}")
     url = reverse(
         "new_upload.reports",
         args=["github", "codecov::::the_repo", commit.commitid],
@@ -48,7 +48,7 @@ def test_create_report_already_exists(client, db, mocker):
 
     repository.save()
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="token " + repository.upload_token)
+    client.credentials(HTTP_AUTHORIZATION=f"token {repository.upload_token}")
     url = reverse(
         "new_upload.reports",
         args=["github", "codecov::::the_repo", commit.commitid],
@@ -69,7 +69,7 @@ def test_reports_post_code_as_default(client, db, mocker):
     commit = CommitFactory(repository=repository)
     repository.save()
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="token " + repository.upload_token)
+    client.credentials(HTTP_AUTHORIZATION=f"token {repository.upload_token}")
     url = reverse(
         "new_upload.reports",
         args=["github", "codecov::::the_repo", commit.commitid],

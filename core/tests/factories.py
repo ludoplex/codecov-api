@@ -27,7 +27,10 @@ class RepositoryFactory(DjangoModelFactory):
     using_integration = False
 
 
+
+
 class CommitFactory(DjangoModelFactory):
+
     class Meta:
         model = models.Commit
 
@@ -56,7 +59,7 @@ class CommitFactory(DjangoModelFactory):
         "s": 1,
     }
     parent_commit_id = factory.LazyAttribute(
-        lambda o: sha1((o.message + "parent").encode("utf-8")).hexdigest()
+        lambda o: sha1(f"{o.message}parent".encode("utf-8")).hexdigest()
     )
     state = "complete"
 

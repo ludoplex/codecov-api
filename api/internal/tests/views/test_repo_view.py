@@ -329,7 +329,7 @@ class TestRepositoryViewSetList(RepositoryViewSetTestSuite):
         self.assertEqual(
             len(response.data["results"]),
             2,
-            "got the wrong number of repos: {}".format(len(response.data["results"])),
+            f'got the wrong number of repos: {len(response.data["results"])}',
         )
 
     def test_get_inactive_repos(self):
@@ -340,7 +340,7 @@ class TestRepositoryViewSetList(RepositoryViewSetTestSuite):
         self.assertEqual(
             len(response.data["results"]),
             1,
-            "got the wrong number of repos: {}".format(len(response.data["results"])),
+            f'got the wrong number of repos: {len(response.data["results"])}',
         )
 
     def test_get_all_repos(self):
@@ -351,7 +351,7 @@ class TestRepositoryViewSetList(RepositoryViewSetTestSuite):
         self.assertEqual(
             len(response.data["results"]),
             3,
-            "got the wrong number of repos: {}".format(len(response.data["results"])),
+            f'got the wrong number of repos: {len(response.data["results"])}',
         )
 
     def test_get_all_repos_by_name(self):
@@ -362,7 +362,7 @@ class TestRepositoryViewSetList(RepositoryViewSetTestSuite):
         self.assertEqual(
             len(response.data["results"]),
             2,
-            "got the wrong number of repos: {}".format(len(response.data["results"])),
+            f'got the wrong number of repos: {len(response.data["results"])}',
         )
 
     def test_returns_private_repos_if_user_has_permission(self):
@@ -742,7 +742,7 @@ class TestRepositoryViewSetDetailActions(RepositoryViewSetTestSuite):
         self.assertEqual(
             response.data["branch"],
             "dev",
-            "got unexpected response: {}".format(response.data["branch"]),
+            f'got unexpected response: {response.data["branch"]}',
         )
         self.repo.refresh_from_db()
         assert self.repo.branch == new_default_branch
@@ -835,7 +835,7 @@ class TestRepositoryViewSetDetailActions(RepositoryViewSetTestSuite):
 
         for i in range(9):  # including the one used by other tests, should be 10 total
             RepositoryFactory(
-                name=str(i) + "random", author=self.org, private=True, active=True
+                name=f"{str(i)}random", author=self.org, private=True, active=True
             )
 
         inactive_repo = RepositoryFactory(author=self.org, private=True, active=False)
@@ -1272,7 +1272,7 @@ class TestRepositoryViewSetDetailActions(RepositoryViewSetTestSuite):
 
         response = self._retrieve()
 
-        assert response.data["latest_commit"] == None
+        assert response.data["latest_commit"] is None
 
     def test_can_retrieve_repo_name_containing_dot(self, mocked_get_permissions):
         mocked_get_permissions.return_value = True, True

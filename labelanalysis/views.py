@@ -21,7 +21,7 @@ class LabelAnalysisRequestCreateView(CreateAPIView):
         TaskService().schedule_task(
             label_analysis_task_name,
             kwargs=dict(request_id=instance.id),
-            apply_async_kwargs=dict(),
+            apply_async_kwargs={},
         )
         return instance
 

@@ -21,8 +21,7 @@ def flags_for_repo(repository: Repository, filters: Mapping = None) -> QuerySet:
 
 def _apply_filters(queryset: QuerySet, filters: Mapping) -> QuerySet:
     term = filters.get("term")
-    flags_names = filters.get("flags_names")
-    if flags_names:
+    if flags_names := filters.get("flags_names"):
         queryset = queryset.filter(flag_name__in=flags_names)
     if term:
         queryset = queryset.filter(flag_name__contains=term)
@@ -33,12 +32,11 @@ def _apply_filters(queryset: QuerySet, filters: Mapping) -> QuerySet:
 def get_flag_comparisons(
     commit_comparison: CommitComparison,
 ) -> Iterable[FlagComparison]:
-    queryset = (
+    return (
         FlagComparison.objects.select_related("repositoryflag")
         .filter(commit_comparison=commit_comparison.id)
         .all()
     )
-    return queryset
 
 
 def flag_measurements(

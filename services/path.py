@@ -43,10 +43,7 @@ class PathNode:
 
     @property
     def coverage(self) -> float:
-        if self.lines > 0:
-            return float(self.hits / self.lines) * 100
-        else:
-            return 0.0
+        return float(self.hits / self.lines) * 100 if self.lines > 0 else 0.0
 
 
 @dataclass
@@ -108,10 +105,7 @@ class PrefixedPath:
         is `a/b/c/d.txt` and `prefix` is `a/b` then this method would return `a/b/c`.
         """
         name = self.relative_path.split("/", 1)[0]
-        if self.prefix:
-            return f"{self.prefix}/{name}"
-        else:
-            return name
+        return f"{self.prefix}/{name}" if self.prefix else name
 
 
 def is_subpath(full_path: str, subpath: str):
@@ -128,7 +122,7 @@ def calculate_path_file_and_dir_groups(path: str) -> tuple[str, str]:
 
 def is_file(path) -> bool:
     (path, filename) = calculate_path_file_and_dir_groups(path=path)
-    return True if "." in filename and filename[0] != "." else False
+    return "." in filename and filename[0] != "."
 
 
 def dashboard_commit_file_url(
@@ -225,8 +219,4 @@ def provider_path_exists(path: str, commit: Commit, owner: Owner):
         async_to_sync(adapter.list_files)(commit.commitid, path)
         return True
     except TorngitClientError as e:
-        if e.code == 404:
-            return False
-        else:
-            # more generic error from provider
-            return None
+        return False if e.code == 404 else None

@@ -23,10 +23,12 @@ def _is_admin_on_provider(owner, current_user):
         },
     )
 
-    isAdmin = async_to_sync(torngit_provider_adapter.get_is_admin)(
-        user={"username": current_user.username, "service_id": current_user.service_id}
+    return async_to_sync(torngit_provider_adapter.get_is_admin)(
+        user={
+            "username": current_user.username,
+            "service_id": current_user.service_id,
+        }
     )
-    return isAdmin
 
 
 class GetIsCurrentUserAnAdminInteractor(BaseInteractor):
@@ -34,22 +36,20 @@ class GetIsCurrentUserAnAdminInteractor(BaseInteractor):
     def execute(self, owner, current_owner):
         if settings.IS_ENTERPRISE:
             return self_hosted.is_admin_owner(current_owner)
-        else:
-            if not current_owner:
-                return False
-            admins = owner.admins
-            if not hasattr(current_owner, "ownerid"):
-                return False
-            if owner.ownerid == current_owner.ownerid:
-                return True
-            else:
-                try:
-                    isAdmin = async_to_sync(_is_admin_on_provider)(owner, current_owner)
-                    if isAdmin:
-                        # save admin provider in admins list
-                        owner.admins.append(current_owner.ownerid)
-                        owner.save()
-                    return isAdmin or (current_owner.ownerid in admins)
-                except Exception as error:
-                    print("Error Calling Admin Provider " + repr(error))
-                    return False
+        if not current_owner:
+            return False
+        if not hasattr(current_owner, "ownerid"):
+            return False
+        if owner.ownerid == current_owner.ownerid:
+            return True
+        admins = owner.admins
+        try:
+            isAdmin = async_to_sync(_is_admin_on_provider)(owner, current_owner)
+            if isAdmin:
+                # save admin provider in admins list
+                owner.admins.append(current_owner.ownerid)
+                owner.save()
+            return isAdmin or (current_owner.ownerid in admins)
+        except Exception as error:
+            print(f"Error Calling Admin Provider {repr(error)}")
+            return False

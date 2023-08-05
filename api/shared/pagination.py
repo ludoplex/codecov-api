@@ -29,9 +29,8 @@ class PaginationMixin:
         if not hasattr(self, "_paginator"):
             if self.pagination_class is None:
                 self._paginator = None
+            elif "cursor" in self.request.query_params:
+                self._paginator = CodecovCursorPagination()
             else:
-                if "cursor" in self.request.query_params:
-                    self._paginator = CodecovCursorPagination()
-                else:
-                    self._paginator = self.pagination_class()
+                self._paginator = self.pagination_class()
         return self._paginator

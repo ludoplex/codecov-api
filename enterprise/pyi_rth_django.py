@@ -3,15 +3,12 @@ import django.utils.autoreload
 
 
 def _get_commands():
-    # Django groupss commands by app.
-    # This returns static dict() as it is for django 1.8 and the default project.
-    commands = {
+    return {
         "runserver": "django.core",
         "migrate": "legacy_migrations",
         "shell": "django.core",
         "collectstatic": "django.contrib.staticfiles",
     }
-    return commands
 
 
 _old_restart_with_reloader = django.utils.autoreload.restart_with_reloader

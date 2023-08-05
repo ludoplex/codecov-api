@@ -30,7 +30,7 @@ def get_token_refresh_callback(
     Produces a callback function that will encode and update the oauth token of an owner.
     This callback is passed to the TorngitAdapter for the service.
     """
-    if service != Service.GITLAB and service != Service.GITLAB_ENTERPRISE:
+    if service not in [Service.GITLAB, Service.GITLAB_ENTERPRISE]:
         return None
 
     @sync_to_async
@@ -75,8 +75,7 @@ def get_generic_adapter_params(owner: Owner, service, use_ssl=False, token=None)
 
 
 def get_provider(service, adapter_params):
-    provider = get(service, **adapter_params)
-    if provider:
+    if provider := get(service, **adapter_params):
         return provider
     else:
         raise TorngitInitializationFailed()

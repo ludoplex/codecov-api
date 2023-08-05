@@ -30,16 +30,14 @@ def admin_owners() -> QuerySet:
     """
     admins = get_config("setup", "admins", default=[])
 
-    filters = [
+    if filters := [
         Q(service=admin["service"], username=admin["username"])
         for admin in admins
         if "service" in admin and "username" in admin
-    ]
-
-    if len(filters) == 0:
-        return Owner.objects.none()
-    else:
+    ]:
         return Owner.objects.filter(reduce(operator.or_, filters))
+    else:
+        return Owner.objects.none()
 
 
 def is_admin_owner(owner: Optional[Owner]) -> bool:

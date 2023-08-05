@@ -132,10 +132,7 @@ class PlanService:
         self.set_default_plan_data()
 
     def expire_trial(self) -> None:
-        if (
-            self.trial_status == TrialStatus.NOT_STARTED
-            or self.trial_status == TrialStatus.ONGOING
-        ):
+        if self.trial_status in [TrialStatus.NOT_STARTED, TrialStatus.ONGOING]:
             self.current_org.trial_end_date = datetime.utcnow()
             # self.current_org.trial_status = TrialStatus.EXPIRED
             self.current_org.save()

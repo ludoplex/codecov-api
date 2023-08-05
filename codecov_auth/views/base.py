@@ -70,10 +70,10 @@ class StateMixin(object):
         # redirect to.
         if url_domain in settings.CORS_ALLOWED_ORIGINS:
             return True
-        for domain_pattern in settings.CORS_ALLOWED_ORIGIN_REGEXES:
-            if re.match(domain_pattern, url_domain):
-                return True
-        return False
+        return any(
+            re.match(domain_pattern, url_domain)
+            for domain_pattern in settings.CORS_ALLOWED_ORIGIN_REGEXES
+        )
 
     def _is_valid_redirection(self, to) -> bool:
         # make sure the redirect url is from a domain we own
@@ -103,10 +103,10 @@ class StateMixin(object):
         return state
 
     def get_redirection_url_from_state(self, state) -> str:
-        data = self.redis.get(self._get_key_redis(state))
-        if not data:
+        if data := self.redis.get(self._get_key_redis(state)):
+            return data.decode("utf-8")
+        else:
             raise SuspiciousOperation("Error with authentication please try again")
-        return data.decode("utf-8")
 
     def remove_state(self, state, delay=0) -> None:
         redirection_url = self.get_redirection_url_from_state(state)
@@ -122,12 +122,10 @@ class LoginMixin(object):
     def modify_redirection_url_based_on_default_user_org(
         self, url: str, owner: Owner
     ) -> str:
-        if (
-            url
-            != f"{settings.CODECOV_DASHBOARD_URL}/{get_short_service_name(self.service)}"
-            and url
-            != f"{settings.CODECOV_DASHBOARD_URL}/{get_long_service_name(self.service)}"
-        ):
+        if url not in [
+            f"{settings.CODECOV_DASHBOARD_URL}/{get_short_service_name(self.service)}",
+            f"{settings.CODECOV_DASHBOARD_URL}/{get_long_service_name(self.service)}",
+        ]:
             return url
 
         owner_profile = None
@@ -145,46 +143,7 @@ class LoginMixin(object):
 
     def login_owner(self, owner: Owner, request: HttpRequest, response: HttpResponse):
         # if there's a currently authenticated user
-        if request.user is not None and not request.user.is_anonymous:
-            if owner.user is None:
-                # TEMPORARY: We have no mechanism in the UI for supporting multiple
-                # owners of the same service linked to the same user.  If the current
-                # user is already linked to an owner of the same service as this one then
-                # we'll logout the current user, create a new user and link the owner to
-                # that new user.  This is not ideal since it creates multiple user records
-                # for the same person that will need to be merged later on.
-                if request.user.owners.filter(service=owner.service).exists():
-                    logout(request)
-                    current_user = User.objects.create(
-                        email=owner.email,
-                        name=owner.name,
-                        is_staff=owner.staff,
-                    )
-                    owner.user = current_user
-                    owner.save()
-                    login(request, current_user)
-                else:
-                    # assign the owner to the currently authenticated user
-                    owner.user = request.user
-                    owner.save()
-                    log.info(
-                        "User claimed owner",
-                        extra=dict(user_id=request.user.pk, ownerid=owner.ownerid),
-                    )
-            elif request.user != owner.user:
-                log.warning(
-                    "Owner already linked to another user",
-                    extra=dict(user_id=request.user.pk, ownerid=owner.ownerid),
-                )
-                # TEMPORARY: We may want to handle this better in the future by indicating
-                # the issue to the user and letting them decide how to proceeed.  For now
-                # we'll just logout the current user and login the user that controls the owner
-                # that just OAuth-ed.
-                logout(request)
-                login(request, owner.user)
-                return
-        # else we do not have a currently authenticated user
-        else:
+        if request.user is None or request.user.is_anonymous:
             current_user = None
             if owner.user is not None:
                 current_user = owner.user
@@ -204,6 +163,43 @@ class LoginMixin(object):
                 extra=dict(user_id=request.user.pk, ownerid=owner.ownerid),
             )
 
+        elif owner.user is None:
+            # TEMPORARY: We have no mechanism in the UI for supporting multiple
+            # owners of the same service linked to the same user.  If the current
+            # user is already linked to an owner of the same service as this one then
+            # we'll logout the current user, create a new user and link the owner to
+            # that new user.  This is not ideal since it creates multiple user records
+            # for the same person that will need to be merged later on.
+            if request.user.owners.filter(service=owner.service).exists():
+                logout(request)
+                current_user = User.objects.create(
+                    email=owner.email,
+                    name=owner.name,
+                    is_staff=owner.staff,
+                )
+                owner.user = current_user
+                owner.save()
+                login(request, current_user)
+            else:
+                # assign the owner to the currently authenticated user
+                owner.user = request.user
+                owner.save()
+                log.info(
+                    "User claimed owner",
+                    extra=dict(user_id=request.user.pk, ownerid=owner.ownerid),
+                )
+        elif request.user != owner.user:
+            log.warning(
+                "Owner already linked to another user",
+                extra=dict(user_id=request.user.pk, ownerid=owner.ownerid),
+            )
+            # TEMPORARY: We may want to handle this better in the future by indicating
+            # the issue to the user and letting them decide how to proceeed.  For now
+            # we'll just logout the current user and login the user that controls the owner
+            # that just OAuth-ed.
+            logout(request)
+            login(request, owner.user)
+            return
         request.session["current_owner_id"] = owner.pk
         RefreshService().trigger_refresh(owner.ownerid, owner.username)
 
@@ -214,10 +210,7 @@ class LoginMixin(object):
         ]
 
         self._check_enterprise_organizations_membership(user_dict, formatted_orgs)
-        upserted_orgs = []
-        for org in formatted_orgs:
-            upserted_orgs.append(self.get_or_create_org(org))
-
+        upserted_orgs = [self.get_or_create_org(org) for org in formatted_orgs]
         self._check_user_count_limitations(user_dict["user"])
         owner, is_new_user = self._get_or_create_owner(user_dict, request)
         fields_to_update = []
@@ -251,20 +244,23 @@ class LoginMixin(object):
 
     def _check_enterprise_organizations_membership(self, user_dict, orgs):
         """Checks if a user belongs to the restricted organizations (or teams if GitHub) allowed in settings."""
-        if settings.IS_ENTERPRISE and get_config(self.service, "organizations"):
-            orgs_in_settings = set(get_config(self.service, "organizations"))
-            orgs_in_user = set(org["username"] for org in orgs)
-            if not (orgs_in_settings & orgs_in_user):
+        if not settings.IS_ENTERPRISE or not get_config(
+            self.service, "organizations"
+        ):
+            return
+        orgs_in_settings = set(get_config(self.service, "organizations"))
+        orgs_in_user = {org["username"] for org in orgs}
+        if not (orgs_in_settings & orgs_in_user):
+            raise PermissionDenied(
+                "You must be a member of an organization listed in the Codecov Enterprise setup."
+            )
+        if get_config(self.service, "teams") and "teams" in user_dict:
+            teams_in_settings = set(get_config(self.service, "teams"))
+            teams_in_user = {team["name"] for team in user_dict["teams"]}
+            if not (teams_in_settings & teams_in_user):
                 raise PermissionDenied(
-                    "You must be a member of an organization listed in the Codecov Enterprise setup."
+                    "You must be a member of an allowed team in your organization."
                 )
-            if get_config(self.service, "teams") and "teams" in user_dict:
-                teams_in_settings = set(get_config(self.service, "teams"))
-                teams_in_user = set([team["name"] for team in user_dict["teams"]])
-                if not (teams_in_settings & teams_in_user):
-                    raise PermissionDenied(
-                        "You must be a member of an allowed team in your organization."
-                    )
 
     def _check_user_count_limitations(self, login_data):
         if not settings.IS_ENTERPRISE:
@@ -299,8 +295,9 @@ class LoginMixin(object):
                         raise PermissionDenied(
                             LICENSE_ERRORS_MESSAGES["users-exceeded"]
                         )
-            elif not user_logging_in_if_exists or (
-                user_logging_in_if_exists and not user_logging_in_if_exists.oauth_token
+            elif (
+                not user_logging_in_if_exists
+                or not user_logging_in_if_exists.oauth_token
             ):
                 users_on_service_count = Owner.objects.filter(
                     oauth_token__isnull=False, service=f"{self.service}"
@@ -369,10 +366,9 @@ class LoginMixin(object):
             )
 
     def retrieve_marketing_tags_from_cookie(self) -> dict:
-        if not settings.IS_ENTERPRISE:
-            cookie_data = self.request.COOKIES.get("_marketing_tags", "")
-            params_as_dict = parse_qs(cookie_data)
-            filtered_params = self._get_utm_params(params_as_dict)
-            return {k: v[0] for k, v in filtered_params.items()}
-        else:
+        if settings.IS_ENTERPRISE:
             return {}
+        cookie_data = self.request.COOKIES.get("_marketing_tags", "")
+        params_as_dict = parse_qs(cookie_data)
+        filtered_params = self._get_utm_params(params_as_dict)
+        return {k: v[0] for k, v in filtered_params.items()}

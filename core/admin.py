@@ -37,9 +37,7 @@ class EstimatedCountPaginator(Paginator):
         cursor = connections[self.object_list.db].cursor()
         cursor.execute("SELECT reltuples FROM pg_class WHERE relname = %s", (db_table,))
         result = cursor.fetchone()
-        if not result:
-            return 0
-        return int(result[0])
+        return 0 if not result else int(result[0])
 
 
 @admin.register(Repository)

@@ -7,7 +7,7 @@ class GraphBadgeAPIMixin(object):
     def get(self, request, *args, **kwargs):
 
         ext = self.kwargs.get("ext")
-        if not ext in self.extensions:
+        if ext not in self.extensions:
             return Response(
                 {
                     "detail": f"File extension should be one of [ {' || '.join(self.extensions)} ]"
@@ -22,9 +22,7 @@ class GraphBadgeAPIMixin(object):
 
         response = HttpResponse(graph)
         if self.kwargs.get("ext") == "svg":
-            response["Content-Disposition"] = ' inline; filename="{}.svg"'.format(
-                self.filename
-            )
+            response["Content-Disposition"] = f' inline; filename="{self.filename}.svg"'
             response["Content-Type"] = "image/svg+xml"
             response["Pragma"] = "no-cache"
             response["Expires"] = "0"

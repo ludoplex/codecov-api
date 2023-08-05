@@ -12,7 +12,7 @@ log = logging.getLogger(__name__)
 
 
 class ArchiveFieldInterfaceMeta(type):
-    def __subclasscheck__(cls, subclass):
+    def __subclasscheck__(self, subclass):
         return (
             hasattr(subclass, "get_repository")
             and callable(subclass.get_repository)
@@ -74,15 +74,14 @@ class ArchiveField:
             owner, ArchiveFieldInterface
         ), "Missing some required methods to use AchiveField"
         self.public_name = name
-        self.db_field_name = "_" + name
-        self.archive_field_name = "_" + name + "_storage_path"
+        self.db_field_name = f"_{name}"
+        self.archive_field_name = f"_{name}_storage_path"
 
     @lru_cache(maxsize=1)
     def _get_value_from_archive(self, obj):
         repository = obj.get_repository()
         archive_service = ArchiveService(repository=repository)
-        archive_field = getattr(obj, self.archive_field_name)
-        if archive_field:
+        if archive_field := getattr(obj, self.archive_field_name):
             try:
                 file_str = archive_service.read_file(archive_field)
                 return self.rehydrate_fn(obj, json.loads(file_str))

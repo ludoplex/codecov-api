@@ -11,8 +11,7 @@ from staticanalysis.models import StaticAnalysisSuite
 
 
 def _get_user_plan_from_ownerid(ownerid, *args, **kwargs) -> str:
-    owner = Owner.objects.filter(ownerid=ownerid).first()
-    if owner:
+    if owner := Owner.objects.filter(ownerid=ownerid).first():
         return owner.plan
     return BillingPlan.users_basic.db_name
 

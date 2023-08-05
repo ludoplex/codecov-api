@@ -61,7 +61,7 @@ class ComparisonLoader(BaseLoader):
 
     async def batch_load_fn(self, keys):
         # flat list of all commits involved in all comparisons
-        commitids = set(commitid for key in keys for commitid in key)
+        commitids = {commitid for key in keys for commitid in key}
 
         commit_loader = CommitLoader.loader(self.info, self.repository_id)
         commits = await commit_loader.load_many(commitids)
@@ -148,7 +148,7 @@ class ComparisonLoader(BaseLoader):
                 # (actual database update happens below)
                 comparison.state = CommitComparison.CommitComparisonStates.PENDING
 
-        if len(comparison_ids) > 0:
+        if comparison_ids:
             CommitComparison.objects.filter(pk__in=comparison_ids).update(
                 state=CommitComparison.CommitComparisonStates.PENDING
             )

@@ -67,16 +67,13 @@ def repo_commits(
     if hide_failed_ci is True:
         queryset = queryset.filter(ci_passed=True)
 
-    branch_name = filters.get("branch_name")
-    if branch_name:
+    if branch_name := filters.get("branch_name"):
         queryset = queryset.filter(branch=branch_name)
 
-    pull_id = filters.get("pull_id")
-    if pull_id:
+    if pull_id := filters.get("pull_id"):
         queryset = queryset.filter(pullid=pull_id)
 
-    search = filters.get("search")
-    if search:
+    if search := filters.get("search"):
         # search against long sha, short sha and commit message substring
         queryset = queryset.annotate(short_sha=Substr(Lower("commitid"), 1, 7)).filter(
             Q(commitid=search.lower())
@@ -84,8 +81,7 @@ def repo_commits(
             | Q(message__icontains=search)
         )
 
-    states = filters.get("states")
-    if states:
+    if states := filters.get("states"):
         queryset = queryset.filter(state__in=states)
 
     # We need `deleted is not true` in order for the query to use the right index.

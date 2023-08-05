@@ -40,7 +40,7 @@ def generate_random_totals(
     complexity = randint(0, 5) if include_complexity else 0
     complexity_total = randint(complexity, 10) if include_complexity else 0
 
-    totals = {
+    return {
         "n": lines,
         "h": hits,
         "p": partials,
@@ -50,7 +50,6 @@ def generate_random_totals(
         "N": complexity_total
         # Not currenly used: diff, files, sessions, branches, methods
     }
-    return totals
 
 
 def setup_commits(
@@ -81,8 +80,8 @@ def setup_commits(
 
         totals = generate_random_totals(**kwargs) if meets_default_filters else None
         state = "complete" if meets_default_filters else "pending"
-        ci_passed = True if meets_default_filters else False
-        deleted = False if meets_default_filters else True
+        ci_passed = bool(meets_default_filters)
+        deleted = not meets_default_filters
 
         G(
             Commit,

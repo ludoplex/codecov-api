@@ -76,10 +76,7 @@ class GithubLoginView(LoginMixin, StateMixin, View):
         authenticated_user["key"] = authenticated_user["access_token"]
         user_orgs = await repo_service.list_teams()
         student_disabled = get_config(self.service, "student_disabled", default=False)
-        if not student_disabled:
-            is_student = await repo_service.is_student()
-        else:
-            is_student = False
+        is_student = await repo_service.is_student() if not student_disabled else False
         has_private_access = "repo" in authenticated_user["scope"].split(",")
 
         teams = await self._get_teams_data(repo_service)
@@ -113,29 +110,28 @@ class GithubLoginView(LoginMixin, StateMixin, View):
     def get(self, request):
         if request.GET.get("code"):
             return self.actual_login_step(request)
-        else:
-            scope = ["user:email", "read:org", "repo:status", "write:repo_hook"]
-            if (
-                settings.IS_ENTERPRISE
-                or request.COOKIES.get("ghpr") == "true"
-                or request.GET.get("private")
-            ):
-                log.info("Appending repo to scope")
-                scope.append("repo")
-                url_to_redirect_to = self.get_url_to_redirect_to(scope)
-                response = redirect(url_to_redirect_to)
-                seconds_in_one_year = 365 * 24 * 60 * 60
-                domain_to_use = settings.COOKIES_DOMAIN
-                response.set_cookie(
-                    "ghpr",
-                    "true",
-                    max_age=seconds_in_one_year,
-                    httponly=True,
-                    domain=domain_to_use,
-                )
-                self.store_to_cookie_utm_tags(response)
-                return response
+        scope = ["user:email", "read:org", "repo:status", "write:repo_hook"]
+        if (
+            settings.IS_ENTERPRISE
+            or request.COOKIES.get("ghpr") == "true"
+            or request.GET.get("private")
+        ):
+            log.info("Appending repo to scope")
+            scope.append("repo")
             url_to_redirect_to = self.get_url_to_redirect_to(scope)
             response = redirect(url_to_redirect_to)
+            seconds_in_one_year = 365 * 24 * 60 * 60
+            domain_to_use = settings.COOKIES_DOMAIN
+            response.set_cookie(
+                "ghpr",
+                "true",
+                max_age=seconds_in_one_year,
+                httponly=True,
+                domain=domain_to_use,
+            )
             self.store_to_cookie_utm_tags(response)
             return response
+        url_to_redirect_to = self.get_url_to_redirect_to(scope)
+        response = redirect(url_to_redirect_to)
+        self.store_to_cookie_utm_tags(response)
+        return response

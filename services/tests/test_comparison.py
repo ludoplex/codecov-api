@@ -141,7 +141,7 @@ class FileComparisonTraverseManagerTests(TestCase):
 
     def test_pop_line_returns_none_if_no_diff_or_src(self):
         manager = FileComparisonTraverseManager()
-        assert manager.pop_line() == None
+        assert manager.pop_line() is None
 
     def test_pop_line_pops_first_line_in_segment_if_traversing_that_segment(self):
         expected_line_value = "+this is a line!"
@@ -451,11 +451,11 @@ class LineComparisonTests(TestCase):
 
     def test_hit_session_ids_no_coverage(self):
         lc = LineComparison(None, [0, "", [[0, 0, 0, 0, 0]], 0, 0], 0, 0, "", False)
-        assert lc.hit_session_ids == None
+        assert lc.hit_session_ids is None
 
     def test_hit_session_ids_no_head_line(self):
         lc = LineComparison(None, None, 0, 0, "", False)
-        assert lc.hit_session_ids == None
+        assert lc.hit_session_ids is None
 
 
 class FileComparisonConstructorTests(TestCase):
@@ -730,7 +730,7 @@ class ComparisonTests(TestCase):
         base_report_mock.return_value = SerializableReport(files={})
         git_comparison_mock.return_value = {"diff": {"files": {}}}
 
-        assert sum(1 for x in self.comparison.files) == 2
+        assert sum(1 for _ in self.comparison.files) == 2
         for fc in self.comparison.files:
             assert isinstance(fc, FileComparison)
             assert fc.head_file.name in head_report_files
@@ -988,7 +988,7 @@ class PullRequestComparisonTests(TestCase):
     @patch("redis.Redis.get")
     def test_files_with_changes_returns_none_if_no_files_with_changes(self, mocked_get):
         mocked_get.return_value = None
-        assert self.comparison._files_with_changes == None
+        assert self.comparison._files_with_changes is None
 
     @patch("redis.Redis.get")
     def test_files_with_changes_doesnt_crash_if_redis_connection_problem(

@@ -46,10 +46,7 @@ def resolve_seats_used(_, info):
 @config_bindable.field("seatsLimit")
 @sync_to_async
 def resolve_seats_limit(_, info):
-    if not settings.IS_ENTERPRISE:
-        return None
-
-    return self_hosted.license_seats()
+    return None if not settings.IS_ENTERPRISE else self_hosted.license_seats()
 
 
 @config_bindable.field("isTimescaleEnabled")
@@ -63,10 +60,7 @@ def resolve_is_timescale_enabled(_, info):
 
 @config_bindable.field("hasAdmins")
 def resolve_has_admins(_, info):
-    if not settings.IS_ENTERPRISE:
-        return None
-
-    return len(settings.ADMINS_LIST) != 0
+    return None if not settings.IS_ENTERPRISE else len(settings.ADMINS_LIST) != 0
 
 
 @config_bindable.field("githubEnterpriseURL")

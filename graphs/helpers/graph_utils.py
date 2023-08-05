@@ -84,7 +84,7 @@ def _svg_rect(x, y, width, height, fill, stroke, stroke_width, _class=None, titl
                 fill,
                 stroke,
                 stroke_width,
-                ('class="%s"' % _class if _class else ""),
+                f'class="{_class}"' if _class else "",
             )
         )
 
@@ -126,10 +126,7 @@ def _tree_height(tree):
     if not subtrees:
         return 1
     children_map = list(map(_tree_height, subtrees))
-    if len(children_map) < 1:
-        return 1
-
-    return 1 + max(children_map)
+    return 1 if not children_map else 1 + max(children_map)
 
 
 def _svg_polar_rect(
@@ -182,26 +179,7 @@ def _svg_polar_rect(
 
     large_arc_flag = 1 if end - start > 0.5 else 0
 
-    path_args = (
-        "M {} {} L {} {} A {} {} 0 {} 0 {} {} L {} {} A {} {} 0 {} 1 {} {} z".format(
-            cx + tpx_inner,
-            cy + tpy_inner,
-            cx + spx_outer,
-            cy + spy_outer,
-            outer_radius,
-            outer_radius,
-            large_arc_flag,
-            cx + tpx_outer,
-            cy + tpy_outer,
-            cx + spx_inner,
-            cy + spy_inner,
-            inner_radius,
-            inner_radius,
-            large_arc_flag,
-            cx + tpx_inner,
-            cy + tpy_inner,
-        )
-    )
+    path_args = f"M {cx + tpx_inner} {cy + tpy_inner} L {cx + spx_outer} {cy + spy_outer} A {outer_radius} {outer_radius} 0 {large_arc_flag} 0 {cx + tpx_outer} {cy + tpy_outer} L {cx + spx_inner} {cy + spy_inner} A {inner_radius} {inner_radius} 0 {large_arc_flag} 1 {cx + tpx_inner} {cy + tpy_inner} z"
 
     return '<path d="{0}" fill="{1}" stroke="{2}" stroke-width="{3}" />'.format(
         path_args, fill, stroke, stroke_width

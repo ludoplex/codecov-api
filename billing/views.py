@@ -29,7 +29,7 @@ class StripeWebhookHandler(APIView):
         if updated >= 1:
             log.info(f"Successfully updated info for {updated} customer(s)")
         else:
-            log.warning(f"Could not find customer")
+            log.warning("Could not find customer")
 
     def invoice_payment_succeeded(self, invoice):
         log.info(
@@ -253,23 +253,18 @@ class StripeWebhookHandler(APIView):
             stripe_customer_id=subscription.customer,
         )
 
-        # Properly attach the payment method on the customer
-        # This hook will be called after a checkout session completes, updating the subscription created
-        # with it
-        default_payment_method = subscription.default_payment_method
-        if default_payment_method:
+        if default_payment_method := subscription.default_payment_method:
             billing = BillingService(requesting_user=owner)
             billing.update_payment_method(owner, default_payment_method)
 
         subscription_schedule_id = subscription.schedule
-        plan_service = PlanService(current_org=owner)
-
         # Only update if there isn't a scheduled subscription
         if not subscription_schedule_id:
+            plan_service = PlanService(current_org=owner)
+
             if subscription.status == "incomplete_expired":
                 log.info(
-                    f"Subscription updated with status change "
-                    f"to 'incomplete_expired' -- cancelling to free",
+                    "Subscription updated with status change to 'incomplete_expired' -- cancelling to free",
                     extra=dict(stripe_subscription_id=subscription.id),
                 )
                 plan_service.set_default_plan_data()
@@ -373,13 +368,13 @@ class StripeWebhookHandler(APIView):
             return Response("Invalid signature", status=status.HTTP_400_BAD_REQUEST)
         if self.event.type not in StripeWebhookEvents.subscribed_events:
             log.warning(
-                f"Unsupported Stripe webhook event received, exiting",
+                "Unsupported Stripe webhook event received, exiting",
                 extra=dict(stripe_webhook_event=self.event.type),
             )
             return Response("Unsupported event type", status=204)
 
         log.info(
-            f"Stripe webhook event received",
+            "Stripe webhook event received",
             extra=dict(stripe_webhook_event=self.event.type),
         )
 

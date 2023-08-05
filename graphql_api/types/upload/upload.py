@@ -42,13 +42,12 @@ def resolve_upload_type(upload, info):
 async def resolve_errors(report_session, info, **kwargs):
     command = info.context["executor"].get_command("upload")
     queryset = await command.get_upload_errors(report_session)
-    result = await queryset_to_connection(
+    return await queryset_to_connection(
         queryset,
         ordering=("updated_at",),
         ordering_direction=OrderingDirection.ASC,
         **kwargs
     )
-    return result
 
 
 @upload_error_bindable.field("errorCode")

@@ -30,14 +30,14 @@ def resolve_author(pull, info):
 
 @pull_bindable.field("head")
 def resolve_head(pull, info):
-    if pull.head == None:
+    if pull.head is None:
         return None
     return CommitLoader.loader(info, pull.repository_id).load(pull.head)
 
 
 @pull_bindable.field("comparedTo")
 def resolve_base(pull, info):
-    if pull.compared_to == None:
+    if pull.compared_to is None:
         return None
     return CommitLoader.loader(info, pull.repository_id).load(pull.compared_to)
 
@@ -52,9 +52,9 @@ async def resolve_compare_with_base(pull, info, **kwargs):
     comparison_loader = ComparisonLoader.loader(info, pull.repository_id)
     commit_comparison = await comparison_loader.load((pull.compared_to, pull.head))
 
-    comparison_error = validate_commit_comparison(commit_comparison=commit_comparison)
-
-    if comparison_error:
+    if comparison_error := validate_commit_comparison(
+        commit_comparison=commit_comparison
+    ):
         return comparison_error
 
     if commit_comparison and commit_comparison.is_processed:

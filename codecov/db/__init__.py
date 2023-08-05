@@ -16,35 +16,27 @@ class DatabaseRouter:
 
     def db_for_read(self, model, **hints):
         if model._meta.app_label == "timeseries":
-            if settings.TIMESERIES_DATABASE_READ_REPLICA_ENABLED:
-                return "timeseries_read"
-            else:
-                return "timeseries"
-        else:
-            if settings.DATABASE_READ_REPLICA_ENABLED:
-                return "default_read"
-            else:
-                return "default"
+            return (
+                "timeseries_read"
+                if settings.TIMESERIES_DATABASE_READ_REPLICA_ENABLED
+                else "timeseries"
+            )
+        return "default_read" if settings.DATABASE_READ_REPLICA_ENABLED else "default"
 
     def db_for_write(self, model, **hints):
-        if model._meta.app_label == "timeseries":
-            return "timeseries"
-        else:
-            return "default"
+        return "timeseries" if model._meta.app_label == "timeseries" else "default"
 
     def allow_migrate(self, db, app_label, model_name=None, **hints):
         if (
-            db == "timeseries" or db == "timeseries_read"
-        ) and not settings.TIMESERIES_ENABLED:
+            db in ["timeseries", "timeseries_read"]
+            and not settings.TIMESERIES_ENABLED
+        ):
             log.warning("Skipping timeseries migration")
             return False
-        if db == "default_read" or db == "timeseries_read":
+        if db in ["default_read", "timeseries_read"]:
             log.warning("Skipping migration of read-only database")
             return False
-        if app_label == "timeseries":
-            return db == "timeseries"
-        else:
-            return db == "default"
+        return db == "timeseries" if app_label == "timeseries" else db == "default"
 
     def allow_relation(self, obj1, obj2, **hints):
         obj1_app = obj1._meta.app_label
@@ -53,11 +45,7 @@ class DatabaseRouter:
         # cannot form relationship across default <-> timeseries dbs
         if obj1_app == "timeseries" and obj2_app != "timeseries":
             return False
-        if obj1_app != "timeseries" and obj2_app == "timeseries":
-            return False
-
-        # otherwise we allow it
-        return True
+        return obj1_app == "timeseries" or obj2_app != "timeseries"
 
 
 @Field.register_lookup
@@ -68,7 +56,7 @@ class IsNot(Lookup):
         lhs, lhs_params = self.process_lhs(compiler, connection)
         rhs, rhs_params = self.process_rhs(compiler, connection)
         params = tuple(lhs_params) + tuple(rhs_params)
-        return "%s is not %s" % (lhs, rhs), params
+        return f"{lhs} is not {rhs}", params
 
 
 class DatabaseSyncToAsync(SyncToAsync):

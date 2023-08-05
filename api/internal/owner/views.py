@@ -47,12 +47,12 @@ class InvoiceViewSet(
 
     def get_object(self):
         invoice_id = self.kwargs.get("pk")
-        invoice = BillingService(
+        if invoice := BillingService(
             requesting_user=self.request.current_owner
-        ).get_invoice(self.owner, invoice_id)
-        if not invoice:
+        ).get_invoice(self.owner, invoice_id):
+            return invoice
+        else:
             raise NotFound(f"Invoice {invoice_id} does not exist for that account")
-        return invoice
 
 
 class AccountDetailsViewSet(
@@ -67,8 +67,7 @@ class AccountDetailsViewSet(
 
     @stripe_safe
     def retrieve(self, *args, **kwargs):
-        res = super().retrieve(*args, **kwargs)
-        return res
+        return super().retrieve(*args, **kwargs)
 
     @stripe_safe
     def update(self, *args, **kwargs):
@@ -113,9 +112,7 @@ class UsersOrderingFilter(filters.OrderingFilter):
         return fields
 
     def filter_queryset(self, request, queryset, view):
-        ordering = self.get_ordering(request, queryset, view)
-
-        if ordering:
+        if ordering := self.get_ordering(request, queryset, view):
             ordering = [self._order_expression(order) for order in ordering]
             ordering += ["ownerid"]  # secondary sort column makes this deterministic
             return queryset.order_by(*ordering)

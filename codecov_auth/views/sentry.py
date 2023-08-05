@@ -34,9 +34,7 @@ class SentryLoginView(LoginMixin, View):
             },
         )
 
-        if res.status_code >= 400:
-            return None
-        return res.json()
+        return None if res.status_code >= 400 else res.json()
 
     def _redirect_to_consent(self) -> HttpResponse:
         qs = urlencode(
@@ -65,12 +63,11 @@ class SentryLoginView(LoginMixin, View):
         # TEMPORARY: we're assuming a single owner for the time being since there's
         # no supporting UI to select which owner you'd like to view
         owner = current_user.owners.first()
-        if owner is not None:
-            service = get_short_service_name(owner.service)
-            return redirect(f"{settings.CODECOV_DASHBOARD_URL}/{service}")
-        else:
+        if owner is None:
             # user has not connected any owners yet
             return redirect(f"{settings.CODECOV_DASHBOARD_URL}/sync")
+        service = get_short_service_name(owner.service)
+        return redirect(f"{settings.CODECOV_DASHBOARD_URL}/{service}")
 
     def _login_user(self, request: HttpRequest, user_data: dict):
         sentry_id = user_data["user"]["id"]
@@ -95,19 +92,17 @@ class SentryLoginView(LoginMixin, View):
                 # claimed this Sentry account (below)
                 logout(request)
                 current_user = sentry_user.user
+        elif sentry_user:
+            log.info(
+                "Existing Sentry user logging in",
+                extra=dict(sentry_user_id=sentry_user.pk),
+            )
+            current_user = sentry_user.user
         else:
-            # we're not authenticated
-            if sentry_user:
-                log.info(
-                    "Existing Sentry user logging in",
-                    extra=dict(sentry_user_id=sentry_user.pk),
-                )
-                current_user = sentry_user.user
-            else:
-                current_user = User.objects.create(
-                    name=user_name,
-                    email=user_email,
-                )
+            current_user = User.objects.create(
+                name=user_name,
+                email=user_email,
+            )
 
         if sentry_user is None:
             sentry_user = SentryUser.objects.create(

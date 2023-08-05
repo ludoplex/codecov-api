@@ -31,6 +31,6 @@ class DeleteSessionTestCase(GraphQLTestHelper, TransactionTestCase):
         data = self.gql_request(
             query, owner=self.owner, variables={"input": {"sessionid": sessionid}}
         )
-        assert data["deleteSession"] == None
+        assert data["deleteSession"] is None
         deleted_session = self.owner.session_set.filter(sessionid=sessionid).first()
         assert None == deleted_session

@@ -25,7 +25,7 @@ class ProfilingUploadCreateView(CreateAPIView):
     permission_classes = [CanDoProfilingUploadsPermission]
 
     def perform_create(self, serializer):
-        location = "{}.txt".format(uuid4())
+        location = f"{uuid4()}.txt"
         repository = self.request.auth.get_repositories()[0]
         archive_service = ArchiveService(repository)
         path = MinioEndpoints.profiling_upload.get_path(

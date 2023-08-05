@@ -24,7 +24,7 @@ def test_simple_profiling_apicall(db, mocker):
         version_identifier="newidea",
     )
     url = reverse("create_profiling_upload")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     response = client.post(url, {"profiling": pc.code}, format="json")
     assert response.status_code == 201
     response_json = response.json()
@@ -62,7 +62,7 @@ def test_creating_profiling_commit_no_code(db):
     client = APIClient()
     assert not ProfilingCommit.objects.filter(repository=repo).exists()
     url = reverse("create_profiling_version")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     response = client.post(
         url,
         {"environment": "production", "version_identifier": "v1.0.9"},
@@ -81,7 +81,7 @@ def test_creating_profiling_commit_does_not_exist(db, mocker):
         repository=repo, code="productionv1.0.9"
     ).exists()
     url = reverse("create_profiling_version")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     response = client.post(
         url,
         {
@@ -127,7 +127,7 @@ def test_creating_profiling_commit_already_exist(db, mocker):
         repository=repo, environment="production", version_identifier="v1.0.9"
     ).exists()
     url = reverse("create_profiling_version")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     response = client.post(
         url,
         {

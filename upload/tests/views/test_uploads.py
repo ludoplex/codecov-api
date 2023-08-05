@@ -270,7 +270,7 @@ def test_uploads_post(mock_metrics, db, mocker, mock_redis):
     assert UploadFlagMembership.objects.filter(
         report_session_id=upload.id, flag_id=flag2.id
     ).exists()
-    assert [flag for flag in upload.flags.all()] == [flag1, flag2]
+    assert list(upload.flags.all()) == [flag1, flag2]
     mock_metrics.assert_has_calls(
         [call("upload.cli.version"), call("uploads.accepted", 1)]
     )

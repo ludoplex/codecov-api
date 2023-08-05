@@ -47,8 +47,7 @@ class StripeLineItemSerializer(serializers.Serializer):
     quantity = serializers.IntegerField()
 
     def get_plan_name(self, line_item):
-        plan = line_item.get("plan")
-        if plan:
+        if plan := line_item.get("plan"):
             return plan.get("name")
 
 
@@ -82,8 +81,7 @@ class StripeDiscountSerializer(serializers.Serializer):
     expires = serializers.SerializerMethodField()
 
     def get_expires(self, customer):
-        coupon = customer.get("coupon")
-        if coupon:
+        if coupon := customer.get("coupon"):
             months = coupon.get("duration_in_months")
             created = coupon.get("created")
             if months and created:
@@ -122,7 +120,7 @@ class PlanSerializer(serializers.Serializer):
         if value not in plan_values:
             if value in SENTRY_PAID_USER_PLAN_REPRESENTATIONS:
                 log.warning(
-                    f"Non-Sentry user attempted to transition to Sentry plan",
+                    "Non-Sentry user attempted to transition to Sentry plan",
                     extra=dict(owner_id=current_owner.pk, plan=value),
                 )
             raise serializers.ValidationError(
@@ -137,22 +135,22 @@ class PlanSerializer(serializers.Serializer):
         if plan["value"] in PRO_PLANS:
             if "quantity" not in plan:
                 raise serializers.ValidationError(
-                    f"Field 'quantity' required for updating to paid plans"
+                    "Field 'quantity' required for updating to paid plans"
                 )
             if plan["quantity"] <= 1:
                 raise serializers.ValidationError(
-                    f"Quantity for paid plan must be greater than 1"
+                    "Quantity for paid plan must be greater than 1"
                 )
             if plan["quantity"] < owner.activated_user_count:
                 raise serializers.ValidationError(
-                    f"Quantity cannot be lower than currently activated user count"
+                    "Quantity cannot be lower than currently activated user count"
                 )
             if (
                 plan["quantity"] == owner.plan_user_count
                 and plan["value"] == owner.plan
             ):
                 raise serializers.ValidationError(
-                    f"Quantity or plan for paid plan must be different from the existing one"
+                    "Quantity or plan for paid plan must be different from the existing one"
                 )
         return plan
 
@@ -180,8 +178,7 @@ class StripeScheduledPhaseSerializer(serializers.Serializer):
         plan_name = list(stripe_plan_dict.keys())[
             list(stripe_plan_dict.values()).index(plan_id)
         ]
-        marketing_plan_name = PRO_PLANS[plan_name].billing_rate
-        return marketing_plan_name
+        return PRO_PLANS[plan_name].billing_rate
 
     def get_quantity(self, phase):
         return phase["plans"][0]["quantity"]
@@ -194,17 +191,16 @@ class ScheduleDetailSerializer(serializers.Serializer):
     def get_scheduled_phase(self, schedule):
         if len(schedule["phases"]) == 2:
             return StripeScheduledPhaseSerializer(schedule["phases"][1]).data
-        else:
-            # This error represents the phases object not having 2 phases; we are interested in the 2nd entry within phases
-            # since it represents the scheduled phase
-            log.error(
-                "Expecting schedule object to have 2 phases, returning None",
-                extra=dict(
-                    ownerid=schedule.metadata.obo_organization,
-                    requesting_user_id=schedule.metadata.obo,
-                ),
-            )
-            return None
+        # This error represents the phases object not having 2 phases; we are interested in the 2nd entry within phases
+        # since it represents the scheduled phase
+        log.error(
+            "Expecting schedule object to have 2 phases, returning None",
+            extra=dict(
+                ownerid=schedule.metadata.obo_organization,
+                requesting_user_id=schedule.metadata.obo,
+            ),
+        )
+        return None
 
 
 class RootOrganizationSerializer(serializers.Serializer):
@@ -255,13 +251,11 @@ class AccountDetailsSerializer(serializers.ModelSerializer):
         return BillingService(requesting_user=current_owner)
 
     def get_subscription_detail(self, owner):
-        subscription_detail = self._get_billing().get_subscription(owner)
-        if subscription_detail:
+        if subscription_detail := self._get_billing().get_subscription(owner):
             return SubscriptionDetailSerializer(subscription_detail).data
 
     def get_schedule_detail(self, owner):
-        schedule_detail = self._get_billing().get_schedule(owner)
-        if schedule_detail:
+        if schedule_detail := self._get_billing().get_schedule(owner):
             return ScheduleDetailSerializer(schedule_detail).data
 
     def get_checkout_session_id(self, _):

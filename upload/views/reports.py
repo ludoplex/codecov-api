@@ -37,10 +37,9 @@ class ReportViews(ListCreateAPIView, GetterMixin):
         code = serializer.validated_data.get("code")
         if code == "default":
             serializer.validated_data["code"] = None
-        instance = serializer.save(
+        return serializer.save(
             commit_id=commit.id,
         )
-        return instance
 
     def list(self, request: HttpRequest, service: str, repo: str, commit_sha: str):
         return HttpResponseNotAllowed(permitted_methods=["POST"])
@@ -92,5 +91,5 @@ class ReportResultsView(
                     report_code=self.kwargs.get("report_code"),
                 ),
             )
-            raise ValidationError(f"Report Results not found")
+            raise ValidationError("Report Results not found")
         return report_results

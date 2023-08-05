@@ -34,25 +34,29 @@ class Command(MigrateCommand):
         try:
             cursor.execute("SELECT * FROM django_migrations;")
         except ProgrammingError:
-            codecov_auth_options = {**options}
-            codecov_auth_options["fake"] = True
-            codecov_auth_options["app_label"] = "codecov_auth"
-            codecov_auth_options["migration_name"] = "0001"
-
-            core_options = {**options}
-            core_options["fake"] = True
-            core_options["app_label"] = "core"
-            core_options["migration_name"] = "0001"
-
-            reports_options = {**options}
-            reports_options["fake"] = True
-            reports_options["app_label"] = "reports"
-            reports_options["migration_name"] = "0001"
-
-            legacy_options = {**options}
-            legacy_options["app_label"] = "legacy_migrations"
-            legacy_options["migration_name"] = None
-
+            codecov_auth_options = {
+                **options,
+                "fake": True,
+                "app_label": "codecov_auth",
+                "migration_name": "0001",
+            }
+            core_options = {
+                **options,
+                "fake": True,
+                "app_label": "core",
+                "migration_name": "0001",
+            }
+            reports_options = {
+                **options,
+                "fake": True,
+                "app_label": "reports",
+                "migration_name": "0001",
+            }
+            legacy_options = {
+                **options,
+                "app_label": "legacy_migrations",
+                "migration_name": None,
+            }
             super().handle(*args, **codecov_auth_options)
             super().handle(*args, **core_options)
             super().handle(*args, **reports_options)
@@ -77,10 +81,7 @@ class Command(MigrateCommand):
         log.info("Trying to acquire migrations lock...")
         acquired = lock.acquire(timeout=180)
 
-        if not acquired:
-            return None
-
-        return lock
+        return None if not acquired else lock
 
     def handle(self, *args, **options):
         log.info("Codecov is starting migrations...")

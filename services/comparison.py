@@ -221,12 +221,7 @@ class FileComparisonVisitor:
 
         # copied from ReportFile._line, minus dataclass instantiation
         if line:
-            if type(line) is list:
-                return line
-            else:
-                # these are old versions
-                # note:(pierce) ^^ this comment is copied, not sure what it means
-                return json.loads(line)
+            return line if type(line) is list else json.loads(line)
 
     def _get_lines(self, base_ln, head_ln):
         base_line = self._get_line(self.base_file, base_ln)
@@ -338,29 +333,18 @@ class LineComparison:
 
     @cached_property
     def head_line_sessions(self) -> Optional[List[tuple]]:
-        if self.head_line is None:
-            return None
-
-        # `head_line` is the tuple representation of a `shared.reports.types.ReportLine`
-        # it has the following shape:
-        # (coverage, type, sessions, messages, complexity, datapoints)
-
-        # each session is a tuple representation of a `shared.reports.types.LineSession`
-        # is has the following shape:
-        # (id, coverage, branches, partials, complexity)
-        sessions = self.head_line[2]
-
-        return sessions
+        return None if self.head_line is None else self.head_line[2]
 
     @cached_property
     def hit_count(self) -> Optional[int]:
         if self.head_line_sessions is None:
             return None
 
-        hit_count = 0
-        for (id, coverage, *rest) in self.head_line_sessions:
-            if line_type(coverage) == LineType.hit:
-                hit_count += 1
+        hit_count = sum(
+            1
+            for id, coverage, *rest in self.head_line_sessions
+            if line_type(coverage) == LineType.hit
+        )
         if hit_count > 0:
             return hit_count
 
@@ -369,11 +353,11 @@ class LineComparison:
         if self.head_line_sessions is None:
             return None
 
-        ids = []
-        for (id, coverage, *rest) in self.head_line_sessions:
-            if line_type(coverage) == LineType.hit:
-                ids.append(id)
-        if len(ids) > 0:
+        if ids := [
+            id
+            for id, coverage, *rest in self.head_line_sessions
+            if line_type(coverage) == LineType.hit
+        ]:
             return ids
 
 
@@ -393,18 +377,17 @@ class Segment:
     def segments(cls, file_comparison):
         lines = file_comparison.lines
 
-        # line numbers of interest (i.e. coverage changed or code changed)
-        line_numbers = []
-        for idx, line in enumerate(lines):
+        line_numbers = [
+            idx
+            for idx, line in enumerate(lines)
             if (
                 line.coverage["base"] != line.coverage["head"]
                 or line.added
                 or line.removed
-            ):
-                line_numbers.append(idx)
-
+            )
+        ]
         segmented_lines = []
-        if len(line_numbers) > 0:
+        if line_numbers:
             segmented_lines, last = [[]], None
             for line_number in line_numbers:
                 if last is None or line_number - last <= cls.line_distance:
@@ -463,17 +446,18 @@ class Segment:
 
     @property
     def has_diff_changes(self):
-        for line in self.lines:
-            if line.added or line.removed:
-                return True
-        return False
+        return any(line.added or line.removed for line in self.lines)
 
     @property
     def has_unintended_changes(self):
         for line in self.lines:
             head_coverage = line.coverage["base"]
             base_coverage = line.coverage["head"]
-            if not (line.added or line.removed) and (base_coverage != head_coverage):
+            if (
+                not line.added
+                and not line.removed
+                and base_coverage != head_coverage
+            ):
                 return True
         return False
 
@@ -726,11 +710,10 @@ class Comparison(object):
     # I feel this method should belong to the API Report class, but we're thinking of getting rid of that class soon
     # In truth, this should be in the shared.Report class
     def _has_cff_sessions(self, sessions) -> bool:
-        for session in sessions.values():
-            if session.session_type.value == "carriedforward":
-                return True
-
-        return False
+        return any(
+            session.session_type.value == "carriedforward"
+            for session in sessions.values()
+        )
 
     @property
     def totals(self):
@@ -893,17 +876,15 @@ class ImpactedFile:
         """
         Returns the misses count for a unintended impacted file
         """
-        misses = 0
-
         unexpected_line_changes = self.unexpected_line_changes or []
-        for [
-            base,
-            [head_line_number, head_coverage_value],
-        ] in unexpected_line_changes:
-            if head_coverage_value == "m":
-                misses += 1
-
-        return misses
+        return sum(
+            1
+            for [
+                base,
+                [head_line_number, head_coverage_value],
+            ] in unexpected_line_changes
+            if head_coverage_value == "m"
+        )
 
     @cached_property
     def _direct_misses_count(self) -> int:
@@ -911,14 +892,12 @@ class ImpactedFile:
         Returns the misses count for a direct impacted file
         """
 
-        misses = 0
-
         diff_coverage = self.added_diff_coverage or []
-        for line_number, line_coverage_value in diff_coverage:
-            if line_coverage_value == "m":
-                misses += 1
-
-        return misses
+        return sum(
+            1
+            for line_number, line_coverage_value in diff_coverage
+            if line_coverage_value == "m"
+        )
 
     @cached_property
     def patch_coverage(self) -> Optional[Totals]:
@@ -931,9 +910,9 @@ class ImpactedFile:
                 [_, type_coverage] = added_coverage
                 if type_coverage == "h":
                     hits += 1
-                if type_coverage == "m":
+                elif type_coverage == "m":
                     misses += 1
-                if type_coverage == "p":
+                elif type_coverage == "p":
                     partials += 1
 
             return ImpactedFile.Totals(hits=hits, misses=misses, partials=partials)
@@ -1227,12 +1206,10 @@ class CommitComparisonService:
             return True
 
         base_commit_details = self._commit_report_details(self.base_commit)
-        if base_commit_details is not None and self._last_updated_before(
-            base_commit_details.updated_at
-        ):
-            return True
-
-        return False
+        return bool(
+            base_commit_details is not None
+            and self._last_updated_before(base_commit_details.updated_at)
+        )
 
     def _last_updated_before(self, timestamp: datetime) -> bool:
         """

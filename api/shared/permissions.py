@@ -86,17 +86,13 @@ class RepositoryArtifactPermissions(BasePermission):
             )
         else:
             user_activated_permissions = True
-        has_read_permissions = (
+        if has_read_permissions := (
             request.method in SAFE_METHODS
             and self.permissions_service.has_read_permissions(
                 request.current_owner, view.repo
             )
-        )
-        if has_read_permissions and user_activated_permissions:
-            return True
-        if has_read_permissions and not user_activated_permissions:
-            # user that can access the repo; but are not activated
-            return False
+        ):
+            return bool(user_activated_permissions)
         raise Http404()
 
 

@@ -375,7 +375,7 @@ async def test__get_teams_info(client, mocker):
         url: str = args[2]
         if url.startswith("/user/teams"):
             match = re.search(r"&page=(\d+)", url)
-            page_number = match.group(1)
+            page_number = match[1]
             if page_number == "1":
                 return [dict(name="My team")]
             elif page_number == "2":

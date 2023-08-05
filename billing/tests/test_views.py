@@ -66,13 +66,13 @@ class StripeWebhookHandlerTests(APITestCase):
                 StripeHTTPHeaders.SIGNATURE: "t={},v1={}".format(
                     timestamp,
                     stripe.WebhookSignature._compute_signature(
-                        "{}.{}".format(timestamp, request.body.decode("utf-8")),
+                        f'{timestamp}.{request.body.decode("utf-8")}',
                         settings.STRIPE_ENDPOINT_SECRET,
                     ),
                 )
             },
             data=payload,
-            format="json"
+            format="json",
         )
 
     def test_invoice_payment_succeeded_sets_owner_delinquent_false(self):
@@ -133,7 +133,7 @@ class StripeWebhookHandlerTests(APITestCase):
 
         self.owner.refresh_from_db()
         assert response.status_code == status.HTTP_204_NO_CONTENT
-        assert self.owner.delinquent is True
+        assert self.owner.delinquent
 
     def test_customer_subscription_deleted_sets_plan_to_free(self):
         self.owner.plan = "users-inappy"
@@ -156,8 +156,8 @@ class StripeWebhookHandlerTests(APITestCase):
 
         assert self.owner.plan == PlanName.BASIC_PLAN_NAME.value
         assert self.owner.plan_user_count == 1
-        assert self.owner.plan_activated_users == None
-        assert self.owner.stripe_subscription_id == None
+        assert self.owner.plan_activated_users is None
+        assert self.owner.stripe_subscription_id is None
 
     def test_customer_subscription_deleted_deactivates_all_repos(self):
         RepositoryFactory(author=self.owner, activated=True, active=True)
@@ -235,8 +235,8 @@ class StripeWebhookHandlerTests(APITestCase):
         )
 
         self.owner.refresh_from_db()
-        assert self.owner.stripe_subscription_id == None
-        assert self.owner.stripe_customer_id == None
+        assert self.owner.stripe_subscription_id is None
+        assert self.owner.stripe_customer_id is None
 
     def test_customer_subscription_created_does_nothing_if_plan_not_paid_user_plan(
         self,
@@ -261,8 +261,8 @@ class StripeWebhookHandlerTests(APITestCase):
         )
 
         self.owner.refresh_from_db()
-        assert self.owner.stripe_subscription_id == None
-        assert self.owner.stripe_customer_id == None
+        assert self.owner.stripe_subscription_id is None
+        assert self.owner.stripe_customer_id is None
 
     def test_customer_subscription_created_sets_plan_info(self):
         self.owner.stripe_subscription_id = None
@@ -374,7 +374,7 @@ class StripeWebhookHandlerTests(APITestCase):
         self.owner.refresh_from_db()
         assert self.owner.plan == PlanName.BASIC_PLAN_NAME.value
         assert self.owner.plan_user_count == 0
-        assert self.owner.plan_auto_activate == False
+        assert not self.owner.plan_auto_activate
         upm_mock.assert_called_once_with(self.owner, "pm_1LhiRsGlVGuVgOrkQguJXdeV")
 
     @patch("services.billing.StripeService.update_payment_method")
@@ -407,7 +407,7 @@ class StripeWebhookHandlerTests(APITestCase):
         self.owner.refresh_from_db()
         assert self.owner.plan == "users-pr-inappy"
         assert self.owner.plan_user_count == 10
-        assert self.owner.plan_auto_activate == False
+        assert not self.owner.plan_auto_activate
         upm_mock.assert_called_once_with(self.owner, "pm_1LhiRsGlVGuVgOrkQguJXdeV")
 
     @patch("services.billing.StripeService.update_payment_method")
@@ -445,8 +445,8 @@ class StripeWebhookHandlerTests(APITestCase):
 
         assert self.owner.plan == PlanName.BASIC_PLAN_NAME.value
         assert self.owner.plan_user_count == 1
-        assert self.owner.plan_auto_activate == False
-        assert self.owner.stripe_subscription_id == None
+        assert not self.owner.plan_auto_activate
+        assert self.owner.stripe_subscription_id is None
         assert (
             self.owner.repository_set.filter(active=True, activated=True).count() == 0
         )
@@ -482,7 +482,7 @@ class StripeWebhookHandlerTests(APITestCase):
         self.owner.refresh_from_db()
         assert self.owner.plan == plan_name
         assert self.owner.plan_user_count == quantity
-        assert self.owner.plan_auto_activate == True
+        assert self.owner.plan_auto_activate
         upm_mock.assert_called_once_with(self.owner, "pm_1LhiRsGlVGuVgOrkQguJXdeV")
 
     @patch("services.billing.StripeService.update_payment_method")

@@ -29,11 +29,9 @@ async def resolve_indication_range(repository: Repository, info) -> dict[str, in
 
 @indication_range_bindable.field("upperRange")
 def resolve_upper_range(indicationRange: IndicationRange, info) -> int:
-    upperRange = indicationRange.get("upperRange")
-    return upperRange
+    return indicationRange.get("upperRange")
 
 
 @indication_range_bindable.field("lowerRange")
 def resolve_lower_range(indicationRange: IndicationRange, info) -> int:
-    lowerRange = indicationRange.get("lowerRange")
-    return lowerRange
+    return indicationRange.get("lowerRange")
