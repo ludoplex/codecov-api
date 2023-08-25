@@ -18,8 +18,7 @@ def resolve_id(component_comparison: ComponentComparison, info) -> str:
 @component_comparison_bindable.field("name")
 def resolve_name(component_comparison: ComponentComparison, info) -> str:
     components: dict[str, Component] = info.context["components"]
-    component = components.get(component_comparison.component_id)
-    if component:
+    if component := components.get(component_comparison.component_id):
         return component.get_display_name()
     else:
         # not sure when we would ever get here

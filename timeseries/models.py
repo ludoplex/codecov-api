@@ -89,10 +89,10 @@ class MeasurementSummary(models.Model):
             Interval.INTERVAL_30_DAY: MeasurementSummary30Day,
         }
 
-        model_class = model_classes.get(interval)
-        if not model_class:
+        if model_class := model_classes.get(interval):
+            return model_class.objects
+        else:
             raise ValueError(f"cannot aggregate by '{interval}'")
-        return model_class.objects
 
     class Meta:
         abstract = True

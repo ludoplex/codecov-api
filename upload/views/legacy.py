@@ -243,7 +243,7 @@ class UploadHandler(APIView):
 
             try:
                 upload_url = archive_service.create_raw_upload_presigned_put(
-                    commit_sha=commitid, filename="{}.txt".format(reportid)
+                    commit_sha=commitid, filename=f"{reportid}.txt"
                 )
             except Exception as e:
                 log.warning(

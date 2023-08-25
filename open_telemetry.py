@@ -77,7 +77,7 @@ class CodecovExporter(SpanExporter):
         if path[0] == "/":
             path = path[1:]
         if path[-1] != "/":
-            path = path + "/"
+            path = f"{path}/"
 
         # required but not used at the moment
         # for 404s it appears that django doesn't know how to set paths,
@@ -132,14 +132,12 @@ class CodecovExporter(SpanExporter):
         api = self.attributes["api"]
 
         try:
-            to_send = []
             headers = {
                 "content-type": "application/json",
                 "Authorization": self.attributes["token"],
             }
-            for span in spans:
-                to_send.append(self._format_span(span))
-            requests.post(api + "/api/ingest", headers=headers, json=to_send)
+            to_send = [self._format_span(span) for span in spans]
+            requests.post(f"{api}/api/ingest", headers=headers, json=to_send)
         except ConnectionError:
             logging.exception("failed to export all spans")
             return SpanExportResult.FAILURE

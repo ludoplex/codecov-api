@@ -54,7 +54,7 @@ class BadgeHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
     def get_object(self, request, *args, **kwargs):
         # Validate coverage precision
         precision = self.request.query_params.get("precision", "0")
-        if not precision in self.precisions:
+        if precision not in self.precisions:
             raise NotFound("Coverage precision should be one of [ 0 || 1 || 2 ]")
 
         coverage, coverage_range = self.get_coverage()
@@ -109,8 +109,7 @@ class BadgeHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
         if repo.yaml and repo.yaml.get("coverage", {}).get("range") is not None:
             coverage_range = repo.yaml.get("coverage", {}).get("range")
 
-        flag = self.request.query_params.get("flag")
-        if flag:
+        if flag := self.request.query_params.get("flag"):
             return self.flag_coverage(flag, commit), coverage_range
 
         coverage = (
@@ -137,10 +136,7 @@ class BadgeHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
         flags = commit.full_report.flags
         if flags is None:
             return None
-        flag = flags.get(flag_name)
-        if flag:
-            return flag.totals.coverage
-        return None
+        return flag.totals.coverage if (flag := flags.get(flag_name)) else None
 
 
 class GraphHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
@@ -150,7 +146,7 @@ class GraphHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
     filename = "graph"
 
     def get_object(self, request, *args, **kwargs):
-        options = dict()
+        options = {}
         graph = self.kwargs.get("graph")
 
         flare = self.get_flare()
@@ -193,17 +189,14 @@ class GraphHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
             return sunburst(flare, **options)
 
     def get_flare(self):
-        pullid = self.kwargs.get("pullid")
-
-        if not pullid:
+        if not (pullid := self.kwargs.get("pullid")):
             return self.get_commit_flare()
-        else:
-            pull_flare = self.get_pull_flare(pullid)
-            if pull_flare is None:
-                raise NotFound(
-                    "Not found. Note: private repositories require ?token arguments"
-                )
-            return pull_flare
+        pull_flare = self.get_pull_flare(pullid)
+        if pull_flare is None:
+            raise NotFound(
+                "Not found. Note: private repositories require ?token arguments"
+            )
+        return pull_flare
 
     def get_commit_flare(self):
         commit = self.get_commit()
@@ -235,17 +228,13 @@ class GraphHandler(APIView, RepoPropertyMixin, GraphBadgeAPIMixin):
         if repo.private and repo.image_token != self.request.query_params.get("token"):
             return None
 
-        commitid = self.kwargs.get("commit")
-        if commitid:
-            commit = repo.commits.filter(commitid=commitid).first()
-        else:
-            branch_name = self.kwargs.get("branch") or repo.branch
-            branch = Branch.objects.filter(
-                name=branch_name, repository_id=repo.repoid
-            ).first()
-            if branch is None:
-                return None
+        if commitid := self.kwargs.get("commit"):
+            return repo.commits.filter(commitid=commitid).first()
+        branch_name = self.kwargs.get("branch") or repo.branch
+        branch = Branch.objects.filter(
+            name=branch_name, repository_id=repo.repoid
+        ).first()
+        if branch is None:
+            return None
 
-            commit = repo.commits.filter(commitid=branch.head).first()
-
-        return commit
+        return repo.commits.filter(commitid=branch.head).first()

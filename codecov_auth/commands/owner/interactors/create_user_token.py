@@ -8,7 +8,7 @@ class CreateUserTokenInteractor(BaseInteractor):
     def validate(self, name: str, token_type: str):
         if not self.current_user.is_authenticated:
             raise Unauthenticated()
-        if len(name) == 0:
+        if not name:
             raise ValidationError("name cant be empty")
         if token_type not in UserToken.TokenType.values:
             raise ValidationError(f"invalid token type: {token_type}")

@@ -1267,7 +1267,7 @@ class StripeServiceTests(TestCase):
 
     def test_get_subscription_when_no_subscription(self):
         owner = OwnerFactory(stripe_subscription_id=None)
-        assert self.stripe.get_subscription(owner) == None
+        assert self.stripe.get_subscription(owner) is None
 
     @patch("services.billing.stripe.Subscription.retrieve")
     def test_get_subscription_returns_stripe_data(self, subscription_retrieve_mock):
@@ -1288,7 +1288,7 @@ class StripeServiceTests(TestCase):
 
     def test_update_payment_method_when_no_subscription(self):
         owner = OwnerFactory(stripe_subscription_id=None)
-        assert self.stripe.update_payment_method(owner, "abc") == None
+        assert self.stripe.update_payment_method(owner, "abc") is None
 
     @patch("services.billing.stripe.PaymentMethod.attach")
     @patch("services.billing.stripe.Customer.modify")
@@ -1313,7 +1313,7 @@ class StripeServiceTests(TestCase):
         retrieve_invoice_mock.side_effect = InvalidRequestError(
             message="not found", param=invoice_id
         )
-        assert self.stripe.get_invoice(OwnerFactory(), invoice_id) == None
+        assert self.stripe.get_invoice(OwnerFactory(), invoice_id) is None
         retrieve_invoice_mock.assert_called_once_with(invoice_id)
 
     @patch("services.billing.stripe.Invoice.retrieve")
@@ -1322,7 +1322,7 @@ class StripeServiceTests(TestCase):
         invoice_id = "abc"
         invoice = {"invoice_id": "abc", "customer": "cus_abc"}
         retrieve_invoice_mock.return_value = invoice
-        assert self.stripe.get_invoice(owner, invoice_id) == None
+        assert self.stripe.get_invoice(owner, invoice_id) is None
         retrieve_invoice_mock.assert_called_once_with(invoice_id)
 
     @patch("services.billing.stripe.Invoice.retrieve")
@@ -1384,7 +1384,7 @@ class StripeServiceTests(TestCase):
 
         assert not customer_modify_mock.called
         assert not coupon_create_mock.called
-        assert owner.stripe_coupon_id == None
+        assert owner.stripe_coupon_id is None
 
     @patch("services.billing.stripe.Coupon.create")
     @patch("services.billing.stripe.Customer.modify")
@@ -1399,7 +1399,7 @@ class StripeServiceTests(TestCase):
 
         assert not customer_modify_mock.called
         assert not coupon_create_mock.called
-        assert owner.stripe_coupon_id == None
+        assert owner.stripe_coupon_id is None
 
     @patch("services.billing.stripe.Coupon.create")
     @patch("services.billing.stripe.Customer.modify")

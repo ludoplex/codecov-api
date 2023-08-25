@@ -38,7 +38,7 @@ def _incr(name: str):
     Increment a statsd counter. The passed-in counter will be prefixed with
     "webhooks.github."
     """
-    metrics.incr("webhooks.github." + name)
+    metrics.incr(f"webhooks.github.{name}")
 
 
 def _incr_event(name: str):
@@ -46,7 +46,7 @@ def _incr_event(name: str):
     Increment a statsd counter. The passed in counter will be prefixed with
     "webhooks.github.received."
     """
-    _incr("received." + name)
+    _incr(f"received.{name}")
 
 
 class GithubWebhookHandler(APIView):
@@ -77,13 +77,11 @@ class GithubWebhookHandler(APIView):
         computed_sig = None
         if GitHubHTTPHeaders.SIGNATURE_256 in request.META:
             expected_sig = request.META.get(GitHubHTTPHeaders.SIGNATURE_256)
-            computed_sig = (
-                "sha256=" + hmac.new(key, request.body, digestmod=sha256).hexdigest()
-            )
+            computed_sig = f"sha256={hmac.new(key, request.body, digestmod=sha256).hexdigest()}"
         elif GitHubHTTPHeaders.SIGNATURE in request.META:
             expected_sig = request.META.get(GitHubHTTPHeaders.SIGNATURE)
             computed_sig = (
-                "sha1=" + hmac.new(key, request.body, digestmod=sha1).hexdigest()
+                f"sha1={hmac.new(key, request.body, digestmod=sha1).hexdigest()}"
             )
 
         if (
@@ -129,8 +127,10 @@ class GithubWebhookHandler(APIView):
                 )
             except Repository.DoesNotExist:
                 log.info(
-                    f"Received event for non-existent repository",
-                    extra=dict(repo_service_id=repo_service_id, repo_slug=repo_slug),
+                    "Received event for non-existent repository",
+                    extra=dict(
+                        repo_service_id=repo_service_id, repo_slug=repo_slug
+                    ),
                 )
                 raise NotFound("Repository does not exist")
         else:
@@ -151,8 +151,10 @@ class GithubWebhookHandler(APIView):
                         repo_data, owner
                     )[0]
                 log.info(
-                    f"Received event for non-existent repository",
-                    extra=dict(repo_service_id=repo_service_id, repo_slug=repo_slug),
+                    "Received event for non-existent repository",
+                    extra=dict(
+                        repo_service_id=repo_service_id, repo_slug=repo_slug
+                    ),
                 )
                 raise NotFound("Repository does not exist")
 
@@ -162,7 +164,7 @@ class GithubWebhookHandler(APIView):
 
     def repository(self, request, *args, **kwargs):
         action, repo = self.request.data.get("action"), self._get_repo(request)
-        _incr_event(GitHubWebhookEvents.REPOSITORY + "." + action)
+        _incr_event(f"{GitHubWebhookEvents.REPOSITORY}.{action}")
         if action == "publicized":
             repo.private, repo.activated = False, False
             repo.save()
@@ -196,7 +198,7 @@ class GithubWebhookHandler(APIView):
 
     def delete(self, request, *args, **kwargs):
         ref_type = request.data.get("ref_type")
-        _incr_event(GitHubWebhookEvents.DELETE + "." + ref_type)
+        _incr_event(f"{GitHubWebhookEvents.DELETE}.{ref_type}")
         repo = self._get_repo(request)
         if ref_type != "branch":
             log.info(
@@ -227,7 +229,7 @@ class GithubWebhookHandler(APIView):
 
     def push(self, request, *args, **kwargs):
         ref_type = "branch" if request.data.get("ref")[5:10] == "heads" else "tag"
-        _incr_event(GitHubWebhookEvents.PUSH + "." + ref_type)
+        _incr_event(f"{GitHubWebhookEvents.PUSH}.{ref_type}")
         repo = self._get_repo(request)
         if ref_type != "branch":
             log.debug(
@@ -453,7 +455,7 @@ class GithubWebhookHandler(APIView):
 
     def organization(self, request, *args, **kwargs):
         action = request.data.get("action")
-        _incr_event(GitHubWebhookEvents.ORGANIZATION + "." + action)
+        _incr_event(f"{GitHubWebhookEvents.ORGANIZATION}.{action}")
         if action == "member_removed":
             log.info(
                 f"Removing user with service-id {request.data['membership']['user']['id']} "
@@ -489,20 +491,14 @@ class GithubWebhookHandler(APIView):
                     data="Attempted to remove non Codecov user from Codecov org failed",
                 )
 
-            try:
+            with suppress(ValueError):
                 if member.organizations:
                     member.organizations.remove(org.ownerid)
                     member.save(update_fields=["organizations"])
-            except ValueError:
-                pass
-
-            try:
+            with suppress(ValueError):
                 if org.plan_activated_users:
                     org.plan_activated_users.remove(member.ownerid)
                     org.save(update_fields=["plan_activated_users"])
-            except ValueError:
-                pass
-
             log.info(
                 f"User removal of {member.ownerid}, success",
                 extra=dict(ownerid=org.ownerid, github_webhook_event=self.event),
@@ -537,11 +533,11 @@ class GithubWebhookHandler(APIView):
 
     def member(self, request, *args, **kwargs):
         action = request.data["action"]
-        _incr_event(GitHubWebhookEvents.MEMBER + "." + action)
+        _incr_event(f"{GitHubWebhookEvents.MEMBER}.{action}")
         if action == "removed":
             repo = self._get_repo(request)
             log.info(
-                f"Request to remove read permissions for user",
+                "Request to remove read permissions for user",
                 extra=dict(repoid=repo.repoid, github_webhook_event=self.event),
             )
             try:
@@ -550,8 +546,10 @@ class GithubWebhookHandler(APIView):
                 )
             except Owner.DoesNotExist:
                 log.info(
-                    f"Repository permissions unchanged -- owner doesn't exist",
-                    extra=dict(repoid=repo.repoid, github_webhook_event=self.event),
+                    "Repository permissions unchanged -- owner doesn't exist",
+                    extra=dict(
+                        repoid=repo.repoid, github_webhook_event=self.event
+                    ),
                 )
                 return Response(status=status.HTTP_404_NOT_FOUND)
 
@@ -568,7 +566,7 @@ class GithubWebhookHandler(APIView):
                 )
             except (ValueError, AttributeError):
                 log.info(
-                    f"Member didn't have read permissions, didn't update",
+                    "Member didn't have read permissions, didn't update",
                     extra=dict(
                         repoid=repo.repoid,
                         ownerid=member.ownerid,

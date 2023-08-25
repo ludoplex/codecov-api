@@ -126,7 +126,7 @@ class GlobalTokenAuthentication(authentication.TokenAuthentication):
         token = self.get_token(request)
         repoid = self.get_repoid(request)
         owner = self.get_owner(request)
-        using_global_token = True if token in global_tokens else False
+        using_global_token = token in global_tokens
         service = global_tokens[token] if using_global_token else None
 
         if using_global_token:

@@ -158,17 +158,17 @@ class TestCommit(GraphQLTestHelper, TransactionTestCase):
             CommitFactory(
                 repository=self.repo_2,
                 commitid=123,
-                timestamp=datetime.today() - timedelta(days=3),
+                timestamp=datetime.now() - timedelta(days=3),
             ),
             CommitFactory(
                 repository=self.repo_2,
                 commitid=456,
-                timestamp=datetime.today() - timedelta(days=1),
+                timestamp=datetime.now() - timedelta(days=1),
             ),
             CommitFactory(
                 repository=self.repo_2,
                 commitid=789,
-                timestamp=datetime.today() - timedelta(days=2),
+                timestamp=datetime.now() - timedelta(days=2),
             ),
         ]
 
@@ -201,7 +201,7 @@ class TestCommit(GraphQLTestHelper, TransactionTestCase):
         }
         data = self.gql_request(query, variables=variables)
         commit = data["owner"]["repository"]["commit"]
-        assert commit["parent"] == None
+        assert commit["parent"] is None
 
     def test_fetch_commit_coverage(self):
         ReportLevelTotalsFactory(report=self.report, coverage=12)
@@ -736,7 +736,7 @@ class TestCommit(GraphQLTestHelper, TransactionTestCase):
         }
         data = self.gql_request(query, variables=variables)
         commit = data["owner"]["repository"]["commit"]
-        assert commit["compareWithParent"]["changeCoverage"] == None
+        assert commit["compareWithParent"]["changeCoverage"] is None
 
     @patch(
         "services.profiling.ProfilingSummary.critical_files", new_callable=PropertyMock
@@ -878,7 +878,7 @@ class TestCommit(GraphQLTestHelper, TransactionTestCase):
         ]
 
     def test_fetch_uploads_number(self):
-        for i in range(25):
+        for _ in range(25):
             UploadFactory(
                 report=self.report,
                 job_code=123,
@@ -894,7 +894,7 @@ class TestCommit(GraphQLTestHelper, TransactionTestCase):
         assert data["owner"]["repository"]["commit"]["totalUploads"] == 25
 
     def test_fetch_all_uploads_is_the_default(self):
-        for i in range(100):
+        for _ in range(100):
             UploadFactory(
                 report=self.report,
                 job_code=123,
@@ -910,7 +910,7 @@ class TestCommit(GraphQLTestHelper, TransactionTestCase):
         assert len(data["owner"]["repository"]["commit"]["uploads"]["edges"]) == 100
 
     def test_fetch_paginated_uploads(self):
-        for i in range(99):
+        for _ in range(99):
             UploadFactory(
                 report=self.report,
                 job_code=123,

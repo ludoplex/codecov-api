@@ -42,7 +42,7 @@ class RepositoryViewSetMixin(
             # Unauthenticated users only have read-access to public repositories,
             # so we avoid this API call here
             self.can_view, self.can_edit = True, False
-        elif not request.user.is_authenticated and repo.private:
+        elif not request.user.is_authenticated:
             raise Http404()
         else:
             # If the user is authenticated, we can fetch permissions from the provider

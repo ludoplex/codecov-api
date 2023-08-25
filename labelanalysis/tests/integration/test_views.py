@@ -30,7 +30,7 @@ def test_simple_label_analysis_call_flow(db, mocker):
     )
     client = APIClient()
     url = reverse("create_label_analysis")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     payload = {
         "base_commit": base_commit.commitid,
         "head_commit": commit.commitid,
@@ -86,7 +86,7 @@ def test_simple_label_analysis_call_flow_same_commit_error(db, mocker):
     )
     client = APIClient()
     url = reverse("create_label_analysis")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     payload = {
         "base_commit": commit.commitid,
         "head_commit": commit.commitid,
@@ -125,7 +125,7 @@ def test_simple_label_analysis_call_flow_with_fallback_on_base(db, mocker):
     )
     client = APIClient()
     url = reverse("create_label_analysis")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     payload = {
         "base_commit": base_commit.commitid,
         "head_commit": commit.commitid,
@@ -183,7 +183,7 @@ def test_simple_label_analysis_call_flow_with_fallback_on_base_error_too_long(
     StaticAnalysisSuiteFactory.create(commit=base_commit_root)
     current = base_commit_root
     attempted_commit_list = [base_commit_root.commitid]
-    for i in range(12):
+    for _ in range(12):
         current = CommitFactory.create(
             parent_commit_id=current.commitid, repository=repository
         )
@@ -194,7 +194,7 @@ def test_simple_label_analysis_call_flow_with_fallback_on_base_error_too_long(
     )
     client = APIClient()
     url = reverse("create_label_analysis")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     payload = {
         "base_commit": base_commit.commitid,
         "head_commit": commit.commitid,
@@ -236,7 +236,7 @@ def test_simple_label_analysis_call_flow_with_fallback_on_base_error(db, mocker)
     )
     client = APIClient()
     url = reverse("create_label_analysis")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     payload = {
         "base_commit": base_commit.commitid,
         "head_commit": commit.commitid,
@@ -281,7 +281,7 @@ def test_simple_label_analysis_call_flow_with_fallback_on_head_error(db, mocker)
     )
     client = APIClient()
     url = reverse("create_label_analysis")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     payload = {
         "base_commit": base_commit.commitid,
         "head_commit": head_commit.commitid,
@@ -323,7 +323,7 @@ def test_simple_label_analysis_only_get(db, mocker):
     label_analysis.save()
     larq_processing_error.save()
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     assert LabelAnalysisRequest.objects.filter(head_commit=commit).count() == 1
     produced_object = LabelAnalysisRequest.objects.get(head_commit=commit)
     assert produced_object == label_analysis
@@ -357,7 +357,7 @@ def test_simple_label_analysis_get_does_not_exist(db, mocker):
         repository__active=True, token_type="static_analysis"
     )
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     get_url = reverse("view_label_analysis", kwargs=dict(external_id=uuid4()))
     response = client.get(
         get_url,
@@ -383,7 +383,7 @@ def test_simple_label_analysis_put_labels(db, mocker):
     )
     label_analysis.save()
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     assert LabelAnalysisRequest.objects.filter(head_commit=commit).count() == 1
     produced_object = LabelAnalysisRequest.objects.get(head_commit=commit)
     assert produced_object == label_analysis
@@ -429,7 +429,7 @@ def test_simple_label_analysis_put_labels_wrong_base_return_404(db, mocker):
     )
     label_analysis.save()
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     assert LabelAnalysisRequest.objects.filter(head_commit=commit).count() == 1
     produced_object = LabelAnalysisRequest.objects.get(head_commit=commit)
     assert produced_object == label_analysis

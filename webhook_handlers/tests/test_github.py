@@ -108,16 +108,16 @@ class GithubWebhookHandlerTests(APITestCase):
             GitHubWebhookEvents.INSTALLATION_REPOSITORIES,
             GitHubWebhookEvents.MARKETPLACE_PURCHASE,
         ]:
-            with self.subTest("with event " + event):
+            with self.subTest(f"with event {event}"):
                 _ = self._post_event_data(
                     event=event,
                     data={},
                 )
-                assert self.metrics["webhooks.github.received." + event] == 1
+                assert self.metrics[f"webhooks.github.received.{event}"] == 1
 
         # Repository event + actions
         for action in ["publicized", "privatized", "deleted"]:
-            with self.subTest("repository " + action):
+            with self.subTest(f"repository {action}"):
                 _ = self._post_event_data(
                     event=GitHubWebhookEvents.REPOSITORY,
                     data={
@@ -128,40 +128,38 @@ class GithubWebhookHandlerTests(APITestCase):
                         },
                     },
                 )
-                assert (
-                    self.metrics["webhooks.github.received.repository." + action] == 1
-                )
+                assert self.metrics[f"webhooks.github.received.repository.{action}"] == 1
 
         # Delete event + ref_types
         for ref_type in ["branch", "other"]:
-            with self.subTest("delete " + ref_type):
+            with self.subTest(f"delete {ref_type}"):
                 branch = BranchFactory(repository=self.repo)
                 _ = self._post_event_data(
                     event=GitHubWebhookEvents.DELETE,
                     data={
-                        "ref": "refs/heads/" + branch.name,
+                        "ref": f"refs/heads/{branch.name}",
                         "ref_type": ref_type,
                         "repository": {"id": self.repo.service_id},
                     },
                 )
-                assert self.metrics["webhooks.github.received.delete." + ref_type] == 1
+                assert self.metrics[f"webhooks.github.received.delete.{ref_type}"] == 1
 
         # Push event + ref_types
         for ref_type, uri in [("branch", "refs/heads/"), ("tag", "refs/tags/")]:
-            with self.subTest("push " + ref_type):
+            with self.subTest(f"push {ref_type}"):
                 _ = self._post_event_data(
                     event=GitHubWebhookEvents.PUSH,
                     data={
-                        "ref": uri + "unmerged",
+                        "ref": f"{uri}unmerged",
                         "repository": {"id": self.repo.service_id},
                         "commits": [],
                     },
                 )
-                assert self.metrics["webhooks.github.received.push." + ref_type] == 1
+                assert self.metrics[f"webhooks.github.received.push.{ref_type}"] == 1
 
         # Organization event + actions
         for action in ["member_removed", "other"]:
-            with self.subTest("organization " + action):
+            with self.subTest(f"organization {action}"):
                 _ = self._post_event_data(
                     event=GitHubWebhookEvents.ORGANIZATION,
                     data={
@@ -170,13 +168,11 @@ class GithubWebhookHandlerTests(APITestCase):
                         "organization": {"id": -1},
                     },
                 )
-                assert (
-                    self.metrics["webhooks.github.received.organization." + action] == 1
-                )
+                assert self.metrics[f"webhooks.github.received.organization.{action}"] == 1
 
         # Member event + actions
         for action in ["removed", "other"]:
-            with self.subTest("member " + action):
+            with self.subTest(f"member {action}"):
                 _ = self._post_event_data(
                     event=GitHubWebhookEvents.MEMBER,
                     data={
@@ -251,8 +247,8 @@ class GithubWebhookHandlerTests(APITestCase):
 
         self.repo.refresh_from_db()
 
-        assert self.repo.private == False
-        assert self.repo.activated == False
+        assert not self.repo.private
+        assert not self.repo.activated
 
     def test_repository_privatized_sets_private_true(self):
         self.repo.private = False
@@ -267,7 +263,7 @@ class GithubWebhookHandlerTests(APITestCase):
 
         self.repo.refresh_from_db()
 
-        assert self.repo.private == True
+        assert self.repo.private
 
     def test_repository_deleted_sets_deleted_activated_and_active(self):
         repository_id = self.repo.repoid
@@ -316,7 +312,7 @@ class GithubWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.DELETE,
             data={
-                "ref": "refs/heads/" + branch.name,
+                "ref": f"refs/heads/{branch.name}",
                 "ref_type": "branch",
                 "repository": {"id": self.repo.service_id},
             },
@@ -355,12 +351,15 @@ class GithubWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + unmerged_branch_name,
+                "ref": f"refs/heads/{unmerged_branch_name}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
                     {"id": commit1.commitid, "message": commit1.message},
                     {"id": commit2.commitid, "message": commit2.message},
-                    {"id": merged_commit.commitid, "message": merged_commit.message},
+                    {
+                        "id": merged_commit.commitid,
+                        "message": merged_commit.message,
+                    },
                 ],
             },
         )
@@ -391,12 +390,15 @@ class GithubWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + repo_branch,
+                "ref": f"refs/heads/{repo_branch}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
                     {"id": commit1.commitid, "message": commit1.message},
                     {"id": commit2.commitid, "message": commit2.message},
-                    {"id": merged_commit.commitid, "message": merged_commit.message},
+                    {
+                        "id": merged_commit.commitid,
+                        "message": merged_commit.message,
+                    },
                 ],
             },
         )
@@ -421,10 +423,13 @@ class GithubWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + branch_name,
+                "ref": f"refs/heads/{branch_name}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
-                    {"id": unmerged_commit.commitid, "message": unmerged_commit.message}
+                    {
+                        "id": unmerged_commit.commitid,
+                        "message": unmerged_commit.message,
+                    }
                 ],
             },
         )
@@ -446,7 +451,7 @@ class GithubWebhookHandlerTests(APITestCase):
         response = self._post_event_data(
             event=GitHubWebhookEvents.PUSH,
             data={
-                "ref": "refs/heads/" + unmerged_branch_name,
+                "ref": f"refs/heads/{unmerged_branch_name}",
                 "repository": {"id": self.repo.service_id},
                 "commits": [
                     {"id": commit1.commitid, "message": commit1.message},
@@ -672,12 +677,12 @@ class GithubWebhookHandlerTests(APITestCase):
             repo1.refresh_from_db()
             repo2.refresh_from_db()
 
-            assert owner.integration_id == None
-            assert repo1.using_integration == False
-            assert repo2.using_integration == False
+            assert owner.integration_id is None
+            assert not repo1.using_integration
+            assert not repo2.using_integration
 
-            assert repo1.bot == None
-            assert repo2.bot == None
+            assert repo1.bot is None
+            assert repo2.bot is None
 
     @patch(
         "services.task.TaskService.refresh",

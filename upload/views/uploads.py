@@ -62,7 +62,7 @@ class UploadViews(ListCreateAPIView, GetterMixin):
             ),
         )
         if "version" in serializer.validated_data:
-            metrics.incr("upload.cli." + f"{serializer.validated_data['version']}")
+            metrics.incr(f"upload.cli.{serializer.validated_data['version']}")
         archive_service = ArchiveService(repository)
         instance: ReportSession = serializer.save(
             report_id=report.id,
@@ -125,24 +125,21 @@ class UploadViews(ListCreateAPIView, GetterMixin):
 
     def get_repo(self) -> Repository:
         try:
-            repo = super().get_repo()
-            return repo
+            return super().get_repo()
         except ValidationError as exception:
             metrics.incr("uploads.rejected", 1)
             raise exception
 
     def get_commit(self, repo: Repository) -> Commit:
         try:
-            commit = super().get_commit(repo)
-            return commit
+            return super().get_commit(repo)
         except ValidationError as excpetion:
             metrics.incr("uploads.rejected", 1)
             raise excpetion
 
     def get_report(self, commit: Commit) -> CommitReport:
         try:
-            report = super().get_report(commit)
-            return report
+            return super().get_report(commit)
         except ValidationError as exception:
             metrics.incr("uploads.rejected", 1)
             raise exception

@@ -9,11 +9,11 @@ from setuptools import Extension, setup
 def get_relevant_paths(path):
     p = Path(path)
     init_files = list(p.glob("**/__init__.py"))
-    extensions = list()
+    extensions = []
     for filepath in init_files:
         dir_path = os.path.dirname(filepath)
         if "migrations" not in dir_path:
-            extensions.append("{}/{}".format(dir_path, "*.py"))
+            extensions.append(f"{dir_path}/*.py")
     return extensions
 
 

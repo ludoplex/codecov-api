@@ -16,7 +16,7 @@ class GetOrgUploadTokenInteractorTest(TransactionTestCase):
         token = await GetOrgUploadToken(
             self.owner_with_no_upload_token, "github"
         ).execute(self.owner_with_no_upload_token)
-        assert token == None
+        assert token is None
 
     async def test_owner_with_org_upload_token(self):
         token = await GetOrgUploadToken(self.owner_with_upload_token, "github").execute(

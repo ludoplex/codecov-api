@@ -93,7 +93,7 @@ class BitbucketLoginView(View, LoginMixin):
         )
         user_dict = self.fetch_user_data(token)
         user = self.get_and_modify_owner(user_dict, request)
-        redirection_url = settings.CODECOV_DASHBOARD_URL + "/bb"
+        redirection_url = f"{settings.CODECOV_DASHBOARD_URL}/bb"
         redirection_url = self.modify_redirection_url_based_on_default_user_org(
             redirection_url, user
         )

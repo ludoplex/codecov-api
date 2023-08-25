@@ -183,9 +183,7 @@ def resolve_graph_token(repository, info):
 
 @repository_bindable.field("yaml")
 def resolve_repo_yaml(repository, info):
-    if repository.yaml is None:
-        return None
-    return yaml.dump(repository.yaml)
+    return None if repository.yaml is None else yaml.dump(repository.yaml)
 
 
 @repository_bindable.field("bot")
@@ -212,13 +210,7 @@ def resolve_flags(
         **kwargs,
     )
 
-    # We fetch the measurements in this resolver since there are multiple child
-    # flag resolvers that depend on this data.  Additionally, we're able to fetch
-    # measurements for all the flags being returned at once.
-    # Use the lookahead to make sure we don't overfetch measurements that we don't
-    # need.
-    node = lookahead(info, ("edges", "node", "measurements"))
-    if node:
+    if node := lookahead(info, ("edges", "node", "measurements")):
         if settings.TIMESERIES_ENABLED:
             # TODO: is there a way to have these automatically casted at a
             # lower level (i.e. based on the schema)?
@@ -277,10 +269,7 @@ def resolve_flags_measurements_backfilled(repository: Repository, info) -> bool:
         repository_id=repository.pk,
     ).first()
 
-    if not dataset:
-        return False
-
-    return dataset.is_backfilled()
+    return False if not dataset else dataset.is_backfilled()
 
 
 @repository_bindable.field("measurements")

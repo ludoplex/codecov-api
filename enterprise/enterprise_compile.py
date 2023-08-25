@@ -40,12 +40,12 @@ class MyBuildExt(build_ext):
 def get_extensions(path):
     p = Path(path)
     init_files = list(p.glob("**/__init__.py"))
-    extensions = list()
+    extensions = []
     for filepath in init_files:
         dir_path = os.path.dirname(filepath)
         if "tests" not in dir_path and "migrations" not in dir_path:
-            dot_name = "{}.*".format(str.replace(dir_path, "/", "."))
-            new_ext = Extension(dot_name, ["{}/*.py".format(dir_path)])
+            dot_name = f'{str.replace(dir_path, "/", ".")}.*'
+            new_ext = Extension(dot_name, [f"{dir_path}/*.py"])
             extensions.append(new_ext)
     # return an array of extensions
     return extensions

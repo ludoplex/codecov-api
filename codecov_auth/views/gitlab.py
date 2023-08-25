@@ -82,8 +82,7 @@ class GitlabLoginView(LoginMixin, StateMixin, View):
     def get(self, request):
         if request.GET.get("code"):
             return self.actual_login_step(request)
-        else:
-            url_to_redirect_to = self.get_url_to_redirect_to()
-            response = redirect(url_to_redirect_to)
-            self.store_to_cookie_utm_tags(response)
-            return response
+        url_to_redirect_to = self.get_url_to_redirect_to()
+        response = redirect(url_to_redirect_to)
+        self.store_to_cookie_utm_tags(response)
+        return response

@@ -20,10 +20,10 @@ class UpdateProfileInteractor(BaseInteractor):
             raise ValidationError(form.errors.as_json())
 
     def update_field(self, field_name, **kwargs):
-        field = kwargs.get(field_name)
-        if not field:
+        if field := kwargs.get(field_name):
+            setattr(self.current_owner, field_name, field)
+        else:
             return
-        setattr(self.current_owner, field_name, field)
 
     @sync_to_async
     def execute(self, **kwargs):

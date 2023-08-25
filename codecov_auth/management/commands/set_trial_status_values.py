@@ -24,7 +24,7 @@ class Command(BaseCommand):
         trial_status_type = options.get("trial_status_type", {})
 
         # NOT_STARTED
-        if trial_status_type == "all" or trial_status_type == "not_started":
+        if trial_status_type in ["all", "not_started"]:
             # Free plan customers
             Owner.objects.filter(
                 plan__in=FREE_PLAN_REPRESENTATIONS,
@@ -32,14 +32,14 @@ class Command(BaseCommand):
             ).update(trial_status=TrialStatus.NOT_STARTED.value)
 
         # ONGOING
-        if trial_status_type == "all" or trial_status_type == "ongoing":
+        if trial_status_type in ["all", "ongoing"]:
             Owner.objects.filter(
                 plan__in=SENTRY_PAID_USER_PLAN_REPRESENTATIONS,
                 trial_end_date__gt=datetime.utcnow(),
             ).update(trial_status=TrialStatus.ONGOING.value)
 
         # EXPIRED
-        if trial_status_type == "all" or trial_status_type == "expired":
+        if trial_status_type in ["all", "expired"]:
             Owner.objects.filter(
                 # Currently paying sentry customer with trial_end_date
                 Q(
@@ -66,7 +66,7 @@ class Command(BaseCommand):
             ).update(trial_status=TrialStatus.EXPIRED.value)
 
         # CANNOT_TRIAL
-        if trial_status_type == "all" or trial_status_type == "cannot_trial":
+        if trial_status_type in ["all", "cannot_trial"]:
             Owner.objects.filter(
                 # Plans that cannot trial
                 ~Q(plan__in=PLANS_THAT_CAN_TRIAL)

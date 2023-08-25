@@ -7,9 +7,7 @@ def apply_filters_to_queryset(queryset, filters):
     term = filters.get("term")
     active = filters.get("active")
     activated = filters.get("activated")
-    repo_names = filters.get("repo_names")
-
-    if repo_names:
+    if repo_names := filters.get("repo_names"):
         queryset = queryset.filter(name__in=repo_names)
     if term:
         queryset = queryset.filter(name__contains=term)

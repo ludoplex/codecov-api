@@ -18,7 +18,7 @@ class GetUploadsNumberPerUserInteractorTest(TransactionTestCase):
         )
         commit = CommitFactory.create(repository=repo)
         report = CommitReportFactory.create(commit=commit)
-        for i in range(150):
+        for _ in range(150):
             UploadFactory.create(report=report)
             UploadFactory.create(report__commit__repository=public_repo)
 

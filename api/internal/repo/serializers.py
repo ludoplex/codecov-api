@@ -76,8 +76,7 @@ class RepoDetailsSerializer(RepoSerializer):
 
         commits_queryset = commits_queryset.filter(branch=branch_param or repo.branch)
 
-        commit = commits_queryset.first()
-        if commit:
+        if commit := commits_queryset.first():
             return CommitWithFileLevelReportSerializer(commit).data
 
     def get_can_view(self, _):

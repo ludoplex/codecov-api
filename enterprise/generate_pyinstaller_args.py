@@ -13,16 +13,15 @@ so_extension = ".cpython-39-x86_64-linux-gnu.so"
 def get_relevant_paths(path):
     p = Path(path)
     init_files = list(p.glob("**/__init__.py"))
-    extensions = list()
+    extensions = []
     for filepath in init_files:
         dir_path = os.path.dirname(filepath)
-        extensions.append("{}/{}".format(dir_path, "*.py"))
-        extensions.append("{}/**/{}".format(dir_path, "*.py"))
+        extensions.extend((f"{dir_path}/*.py", f"{dir_path}/**/*.py"))
     return extensions
 
 
 def get_relevant_dirs(path):
-    extensions = list()
+    extensions = []
     for it in os.scandir(path):
         if it.is_dir() and "tests" not in it.path:
             extensions.append(it.path)
@@ -122,8 +121,9 @@ def main():
     base = celery.__file__.rsplit("/", 1)[0]
     hidden_imports.update(
         [
-            "celery" + file.replace(base, "").replace(".py", "").replace("/", ".")
-            for file in (glob(base + "/*.py") + glob(base + "/**/*.py"))
+            "celery"
+            + file.replace(base, "").replace(".py", "").replace("/", ".")
+            for file in glob(f"{base}/*.py") + glob(f"{base}/**/*.py")
         ]
     )
 
@@ -138,22 +138,22 @@ def main():
         a = list(find_imported_modules(f))
         hidden_imports.update(a)
 
-    args = []
-    args.extend(
-        [
-            f'-r {x.replace(".py", so_extension)},dll,{x.replace("/", ".").replace(".py", so_extension)}'
-            for x in cythonized_files
-        ]
-    )
+    args = [
+        f'-r {x.replace(".py", so_extension)},dll,{x.replace("/", ".").replace(".py", so_extension)}'
+        for x in cythonized_files
+    ]
     args.extend(
         [
             f"--hiddenimport {x}"
             for x in sorted(hidden_imports, key=lambda x: (len(x.split(".")), x))
         ]
     )
-    args.extend([f"--runtime-hook=/pyinstaller/pyi_rth_django.py"])
-    args.extend([f"--additional-hooks-dir /hooks"])
-
+    args.extend(
+        [
+            "--runtime-hook=/pyinstaller/pyi_rth_django.py",
+            "--additional-hooks-dir /hooks",
+        ]
+    )
     print(" ".join(args))
 
 

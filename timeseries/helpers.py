@@ -243,7 +243,7 @@ def fill_sparse_measurements(
         oldest_date = timestamps[0]
         if (
             oldest_date <= start_date
-            and len(intervals) > 0
+            and intervals
             and intervals[0]["avg"] is None
         ):
             # we're missing the first datapoint but we can carry forward
@@ -343,19 +343,18 @@ def repository_coverage_measurements_with_fallback(
             repository_id=repository.pk,
         ).first()
 
-    if settings.TIMESERIES_ENABLED and dataset and dataset.is_backfilled():
-        # timeseries data is ready
-        return coverage_measurements(
-            interval,
-            start_date=start_date,
-            end_date=end_date,
-            owner_id=repository.author_id,
-            repo_id=repository.pk,
-            measurable_id=str(repository.pk),
-            branch=branch or repository.branch,
-        )
-    else:
-        if settings.TIMESERIES_ENABLED and not dataset:
+        if dataset and dataset.is_backfilled():
+            # timeseries data is ready
+            return coverage_measurements(
+                interval,
+                start_date=start_date,
+                end_date=end_date,
+                owner_id=repository.author_id,
+                repo_id=repository.pk,
+                measurable_id=str(repository.pk),
+                branch=branch or repository.branch,
+            )
+        if not dataset:
             # we need to backfill
             dataset = Dataset.objects.create(
                 name=MeasurementName.COVERAGE.value,
@@ -363,14 +362,14 @@ def repository_coverage_measurements_with_fallback(
             )
             trigger_backfill(dataset)
 
-        # we're still backfilling or timeseries is disabled
-        return coverage_fallback_query(
-            interval,
-            start_date=start_date,
-            end_date=end_date,
-            repository_id=repository.pk,
-            branch=branch or repository.branch,
-        )
+    # we're still backfilling or timeseries is disabled
+    return coverage_fallback_query(
+        interval,
+        start_date=start_date,
+        end_date=end_date,
+        repository_id=repository.pk,
+        branch=branch or repository.branch,
+    )
 
 
 def owner_coverage_measurements_with_fallback(
@@ -409,24 +408,23 @@ def owner_coverage_measurements_with_fallback(
             owner_id=owner.pk,
             repos=repos,
         )
-    else:
-        if settings.TIMESERIES_ENABLED:
+    if settings.TIMESERIES_ENABLED:
             # we need to backfill some datasets
-            dataset_repo_ids = set(dataset.repository_id for dataset in datasets)
-            missing_dataset_repo_ids = set(repo_ids) - dataset_repo_ids
-            created_datasets = Dataset.objects.bulk_create(
-                [
-                    Dataset(name=MeasurementName.COVERAGE.value, repository_id=repo_id)
-                    for repo_id in missing_dataset_repo_ids
-                ]
-            )
-            for dataset in created_datasets:
-                trigger_backfill(dataset)
-
-        # we're still backfilling or timeseries is disabled
-        return coverage_fallback_query(
-            interval,
-            start_date=start_date,
-            end_date=end_date,
-            repos=repos,
+        dataset_repo_ids = {dataset.repository_id for dataset in datasets}
+        missing_dataset_repo_ids = set(repo_ids) - dataset_repo_ids
+        created_datasets = Dataset.objects.bulk_create(
+            [
+                Dataset(name=MeasurementName.COVERAGE.value, repository_id=repo_id)
+                for repo_id in missing_dataset_repo_ids
+            ]
         )
+        for dataset in created_datasets:
+            trigger_backfill(dataset)
+
+    # we're still backfilling or timeseries is disabled
+    return coverage_fallback_query(
+        interval,
+        start_date=start_date,
+        end_date=end_date,
+        repos=repos,
+    )

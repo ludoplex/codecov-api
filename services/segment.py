@@ -198,10 +198,8 @@ class SegmentOwner:
                 )
                 context["Marketo"] = {"marketo_cookie": marketo_cookie}
             if ga_cookie:
-                # id is everything after the "GA.1." prefix
-                match = re.match("^.+\.(.+?\..+?)$", ga_cookie)
-                if match:
-                    ga_client_id = match.group(1)
+                if match := re.match("^.+\.(.+?\..+?)$", ga_cookie):
+                    ga_client_id = match[1]
                     context["externalIds"].append(
                         {
                             "id": ga_client_id,

@@ -30,15 +30,13 @@ def get_coverage_type(line_report):
 
 @file_bindable.field("coverage")
 def resolve_content(data, info):
-    file_report = data.get("file_report")
-
-    if not file_report:
+    if file_report := data.get("file_report"):
+        return [
+            {"line": line_report[0], "coverage": get_coverage_type(line_report[1])}
+            for line_report in file_report.lines
+        ]
+    else:
         return []
-
-    return [
-        {"line": line_report[0], "coverage": get_coverage_type(line_report[1])}
-        for line_report in file_report.lines
-    ]
 
 
 @file_bindable.field("totals")

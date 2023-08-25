@@ -73,7 +73,7 @@ class TaskService(object):
         """
         Enqueue a batch of comparison tasks using a Celery group
         """
-        if len(comparison_ids) > 0:
+        if comparison_ids:
             queue_and_config = route_task(
                 celery_config.compute_comparison_task_name,
                 args=None,
@@ -226,7 +226,7 @@ class TaskService(object):
         dataset_names: Iterable[str] = None,
     ):
         log.info(
-            f"Triggering timeseries backfill tasks for repo",
+            "Triggering timeseries backfill tasks for repo",
             extra=dict(
                 repoid=repository.pk,
                 start_date=start_date.isoformat(),
@@ -246,9 +246,7 @@ class TaskService(object):
         task_end_date = end_date
         while task_end_date > start_date:
             task_start_date = task_end_date - delta
-            if task_start_date < start_date:
-                task_start_date = start_date
-
+            task_start_date = max(task_start_date, start_date)
             kwargs = dict(
                 repoid=repository.pk,
                 start_date=task_start_date.isoformat(),
@@ -275,7 +273,7 @@ class TaskService(object):
         end_date: datetime,
     ):
         log.info(
-            f"Triggering dataset backfill",
+            "Triggering dataset backfill",
             extra=dict(
                 dataset_id=dataset.pk,
                 start_date=start_date.isoformat(),
@@ -294,7 +292,7 @@ class TaskService(object):
 
     def delete_timeseries(self, repository_id: int):
         log.info(
-            f"Delete repository timeseries data",
+            "Delete repository timeseries data",
             extra=dict(repository_id=repository_id),
         )
         self._create_signature(

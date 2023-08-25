@@ -86,8 +86,8 @@ class RepositoryViewSet(
     def perform_update(self, serializer):
         # Check repo limits for users with legacy plans
         owner = self.owner
-        if serializer.validated_data.get("active"):
-            if owner.has_legacy_plan and owner.repo_credits <= 0:
+        if owner.has_legacy_plan and owner.repo_credits <= 0:
+            if serializer.validated_data.get("active"):
                 raise PermissionDenied("Private repository limit reached.")
         return super().perform_update(serializer)
 

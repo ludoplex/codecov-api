@@ -275,7 +275,7 @@ class TestFetchRepository(GraphQLTestHelper, TransactionTestCase):
             owner=user,
             variables={"name": repo.name},
         )
-        assert data["me"]["owner"]["repository"]["yaml"] == None
+        assert data["me"]["owner"]["repository"]["yaml"] is None
 
     def test_repository_resolve_bot(self):
         user = OwnerFactory()

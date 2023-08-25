@@ -108,9 +108,9 @@ async def resolve_compare_with_parent(commit: Commit, info, **kwargs):
         (commit.parent_commit_id, commit.commitid)
     )
 
-    comparison_error = validate_commit_comparison(commit_comparison=commit_comparison)
-
-    if comparison_error:
+    if comparison_error := validate_commit_comparison(
+        commit_comparison=commit_comparison
+    ):
         return comparison_error
 
     if commit_comparison and commit_comparison.is_processed:

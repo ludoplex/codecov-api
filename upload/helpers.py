@@ -44,7 +44,6 @@ def parse_params(data):
 
     global_tokens = get_global_tokens()
     params_schema = {
-        # --- The following parameters are populated in the code based on request data, settings, etc.
         "owner": {  # owner username, we set this by splitting the value of "slug" on "/" if provided
             "type": "string",
             "nullable": True,
@@ -59,7 +58,6 @@ def parse_params(data):
                 else None
             ),
         },
-        # repo name, we set this by parsing the value of "slug" if provided
         "repo": {
             "type": "string",
             "nullable": True,
@@ -70,29 +68,29 @@ def parse_params(data):
                 else None
             ),
         },
-        # indicates whether the token provided is a global upload token rather than a repository upload token
-        # note: this needs to go before the "service" field in the schema so we can use is when determining the service value to use
         "using_global_token": {
             "type": "boolean",
-            "default_setter": (
-                lambda document: True
-                if document.get("token") and document.get("token") in global_tokens
-                else False
+            "default_setter": lambda document: bool(
+                document.get("token")
+                and document.get("token") in global_tokens
             ),
         },
-        # --- The following parameters are expected to be provided in the upload request.
-        "version": {"type": "string", "required": True, "allowed": ["v2", "v4"]},
-        # commit SHA
+        "version": {
+            "type": "string",
+            "required": True,
+            "allowed": ["v2", "v4"],
+        },
         "commit": {
             "type": "string",
             "required": True,
             "regex": r"^\d+:\w{12}|\w{40}$",
             "coerce": lambda value: value.lower(),
         },
-        # if this is true, then we won't do any merge commit parsing
         "_did_change_merge_commit": {"type": "boolean"},
-        "slug": {"type": "string", "regex": r"^[\w\-\.\~\/]+\/[\w\-\.]{1,255}$"},
-        # repository upload token
+        "slug": {
+            "type": "string",
+            "regex": r"^[\w\-\.\~\/]+\/[\w\-\.]{1,255}$",
+        },
         "token": {
             "type": "string",
             "anyof": [
@@ -100,7 +98,6 @@ def parse_params(data):
                 {"allowed": list(global_tokens.keys())},
             ],
         },
-        # name of the CI service used, must be a name in the list of CI services we support
         "service": {
             "type": "string",
             "nullable": True,
@@ -114,19 +111,17 @@ def parse_params(data):
                 else None
             ),
         },
-        # pull request number
-        # if a value is passed to the "pull_request" field and not to "pr", we'll use that to set the value of this field
         "pr": {
             "type": "string",
             "regex": r"^(\d+|false|null|undefined|true)$",
             "nullable": True,
             "default_setter": (lambda document: document.get("pull_request")),
             "coerce": (
-                lambda value: None if value in ["false", "null", "undefined"] else value
+                lambda value: None
+                if value in ["false", "null", "undefined"]
+                else value
             ),
         },
-        # pull request number
-        # "deprecated" in the sense that if a value is passed to this field, we'll use it to set "pr" and use that field instead
         "pull_request": {  # pull request number
             "type": "string",
             "regex": r"^(\d+|false|null|undefined|true)$",
@@ -154,13 +149,11 @@ def parse_params(data):
             ),
         },
         "tag": {"type": "string"},
-        # if a value is passed to "travis_job_id" and not to "job", we'll use that to set the value of this field
         "job": {
             "type": "string",
             "nullable": True,
             "default_setter": (lambda document: document.get("travis_job_id")),
         },
-        # "deprecated" in the sense that if a value is passed to this field, we'll use it to set "job" and use that field instead
         "travis_job_id": {"type": "string", "nullable": True, "empty": True},
         "build": {
             "type": "string",
@@ -174,15 +167,13 @@ def parse_params(data):
         "name": {"type": "string"},
         "package": {"type": "string"},
         "s3": {"type": "integer"},
-        "yaml": {
-            "type": "string"
-        },  # file path to custom location of codecov.yml in repo
-        "url": {"type": "string"},  # custom location where report is found
+        "yaml": {"type": "string"},
+        "url": {"type": "string"},
         "parent": {"type": "string"},
         "package": {"type": "string"},
         "project": {"type": "string"},
         "server_uri": {"type": "string"},
-        "root": {"type": "string"},  # deprecated
+        "root": {"type": "string"},
     }
 
     v = Validator(params_schema, allow_unknown=True)
@@ -219,22 +210,13 @@ def determine_repo_for_upload(upload_params):
                 author__username=upload_params.get("owner"),
             )
         except ObjectDoesNotExist:
-            raise NotFound(f"Could not find a repository, try using repo upload token")
+            raise NotFound("Could not find a repository, try using repo upload token")
     else:
         raise ValidationError(
             "Need either a token or service to determine target repository"
         )
 
     return repository
-
-    """
-    TODO: add CI verification and repo retrieval from CI
-    elif service:
-        if not using_global_token:
-            # verify CI TODO
-        
-        # Get repo info from CI TODO
-    """
 
 
 def determine_upload_branch_to_use(upload_params, repo_default_branch):
@@ -264,10 +246,10 @@ def determine_upload_pr_to_use(upload_params):
     - If a branch was provided and the branch name contains "pull" or "pr" followed by digits, extract the digits and use that as the PR number.
     - Otherwise, use the value provided in the request parameters.
     """
-    pullid = is_pull_noted_in_branch.match(upload_params.get("branch") or "")
-    if pullid:
+    if pullid := is_pull_noted_in_branch.match(
+        upload_params.get("branch") or ""
+    ):
         return pullid.groups()[1]
-    # The value of pr can be "true" and we use that info when determining upload branch, however we don't want to save that value to the db
     elif upload_params.get("pr") == "true":
         return None
     else:
@@ -351,9 +333,9 @@ def determine_upload_commit_to_use(upload_params, repository):
             return upload_params.get("commit")
 
         git_commit_message = git_commit_data.get("message", "").strip()
-        is_merge_commit = re.match(r"^Merge\s\w{40}\sinto\s\w{40}$", git_commit_message)
-
-        if is_merge_commit:
+        if is_merge_commit := re.match(
+            r"^Merge\s\w{40}\sinto\s\w{40}$", git_commit_message
+        ):
             # If the commit message says "Merge A into B", we'll extract A and use that as the commitid for this upload
             new_commit_id = git_commit_message.split(" ")[1]
             log.info(
@@ -401,40 +383,40 @@ def get_global_tokens():
 
     Returns dict with structure {<upload token>: <service name>}
     """
-    tokens = {
+    return {
         get_config(service, "global_upload_token"): service
         for service in global_upload_token_providers
         if get_config(service, "global_upload_token")
-    }  # should be empty if we're not in enterprise
-    return tokens
+    }
 
 
 def check_commit_upload_constraints(commit: Commit):
-    if settings.UPLOAD_THROTTLING_ENABLED and commit.repository.private:
-        owner = _determine_responsible_owner(commit.repository)
-        limit = USER_PLAN_REPRESENTATIONS.get(owner.plan, {}).monthly_uploads_limit
-        if limit is not None:
-            did_commit_uploads_start_already = ReportSession.objects.filter(
-                report__commit=commit
-            ).exists()
-            if not did_commit_uploads_start_already:
-                limit = USER_PLAN_REPRESENTATIONS[owner.plan].monthly_uploads_limit
-                uploads_used = ReportSession.objects.filter(
-                    report__commit__repository__author_id=owner.ownerid,
-                    report__commit__repository__private=True,
-                    created_at__gte=timezone.now() - timedelta(days=30),
-                    # attempt at making the query more performant by telling the db to not
-                    # check old commits, which are unlikely to have recent uploads
-                    report__commit__timestamp__gte=timezone.now() - timedelta(days=60),
-                    upload_type="uploaded",
-                )[:limit].count()
-                if uploads_used >= limit:
-                    log.warning(
-                        "User exceeded its limits for usage",
-                        extra=dict(ownerid=owner.ownerid, repoid=commit.repository_id),
-                    )
-                    message = "Request was throttled. Throttled due to limit on private repository coverage uploads to Codecov on a free plan. Please upgrade your plan if you require additional uploads this month."
-                    raise Throttled(detail=message)
+    if not settings.UPLOAD_THROTTLING_ENABLED or not commit.repository.private:
+        return
+    owner = _determine_responsible_owner(commit.repository)
+    limit = USER_PLAN_REPRESENTATIONS.get(owner.plan, {}).monthly_uploads_limit
+    if limit is not None:
+        did_commit_uploads_start_already = ReportSession.objects.filter(
+            report__commit=commit
+        ).exists()
+        if not did_commit_uploads_start_already:
+            limit = USER_PLAN_REPRESENTATIONS[owner.plan].monthly_uploads_limit
+            uploads_used = ReportSession.objects.filter(
+                report__commit__repository__author_id=owner.ownerid,
+                report__commit__repository__private=True,
+                created_at__gte=timezone.now() - timedelta(days=30),
+                # attempt at making the query more performant by telling the db to not
+                # check old commits, which are unlikely to have recent uploads
+                report__commit__timestamp__gte=timezone.now() - timedelta(days=60),
+                upload_type="uploaded",
+            )[:limit].count()
+            if uploads_used >= limit:
+                log.warning(
+                    "User exceeded its limits for usage",
+                    extra=dict(ownerid=owner.ownerid, repoid=commit.repository_id),
+                )
+                message = "Request was throttled. Throttled due to limit on private repository coverage uploads to Codecov on a free plan. Please upgrade your plan if you require additional uploads this month."
+                raise Throttled(detail=message)
 
 
 def validate_upload(upload_params, repository, redis):

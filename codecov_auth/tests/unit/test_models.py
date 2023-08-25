@@ -78,9 +78,9 @@ class TestOwnerModel(TransactionTestCase):
         owner.stripe_customer_id = ""
         owner.stripe_subscription_id = ""
         owner.clean()
-        assert owner.plan == None
-        assert owner.stripe_customer_id == None
-        assert owner.stripe_subscription_id == None
+        assert owner.plan is None
+        assert owner.stripe_customer_id is None
+        assert owner.stripe_subscription_id is None
 
     def test_setting_staff_on_for_not_a_codecov_member(self):
         user_not_part_of_codecov = OwnerFactory(email="user@notcodecov.io", staff=True)
@@ -255,7 +255,7 @@ class TestOwnerModel(TransactionTestCase):
 
     def test_activated_user_count_returns_0_if_plan_activated_users_is_null(self):
         owner = OwnerFactory(plan_activated_users=None)
-        assert owner.plan_activated_users == None
+        assert owner.plan_activated_users is None
         assert owner.activated_user_count == 0
 
     def test_activated_user_count_ignores_students(self):
@@ -362,7 +362,7 @@ class TestOwnerModel(TransactionTestCase):
         assert self.owner.admins == [admin1.ownerid]
 
     def test_access_no_root_organization(self):
-        assert self.owner.root_organization == None
+        assert self.owner.root_organization is None
 
     def test_access_root_organization(self):
         root = OwnerFactory(service="gitlab")

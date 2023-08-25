@@ -12,7 +12,7 @@ class BaseLoader(DataLoader):
         be returned from the request context.
         """
         context_key = f"__dataloader_{cls.__name__}"
-        if len(args) > 0:
+        if args:
             args_key = "_".join([str(arg) for arg in args])
             context_key += f"_{args_key}"
 

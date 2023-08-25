@@ -295,7 +295,7 @@ class RepoCommitDetailTestCase(TestCase):
         assert response.json() == {
             "commitid": self.commit.commitid,
             "message": self.commit.message,
-            "timestamp": self.commit.timestamp.replace(tzinfo=None).isoformat() + "Z",
+            "timestamp": f"{self.commit.timestamp.replace(tzinfo=None).isoformat()}Z",
             "ci_passed": True,
             "author": {
                 "service": "github",

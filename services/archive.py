@@ -174,7 +174,7 @@ class ArchiveService(object):
                 timezone.now().strftime("%Y-%m-%d"),
                 self.storage_hash,
                 commit_sha,
-                "%s.txt" % report_id,
+                f"{report_id}.txt",
             )
         )
 
@@ -214,7 +214,7 @@ class ArchiveService(object):
     """
 
     def delete_repo_files(self):
-        path = "v4/repos/{}".format(self.storage_hash)
+        path = f"v4/repos/{self.storage_hash}"
         objects = self.storage.list_folder_contents(self.root, path)
         for obj in objects:
             self.storage.delete_file(self.root, obj.object_name)
@@ -235,7 +235,7 @@ class ArchiveService(object):
     """
 
     def delete_chunk_from_archive(self, commit_sha):
-        path = "v4/repos/{}/commits/{}/chunks.txt".format(self.storage_hash, commit_sha)
+        path = f"v4/repos/{self.storage_hash}/commits/{commit_sha}/chunks.txt"
 
         self.delete_file(path)
 
@@ -249,11 +249,9 @@ class ArchiveService(object):
             repo_hash = self.storage_hash
 
         if not filename:
-            filename = "{}.txt".format(uuid4())
+            filename = f"{uuid4()}.txt"
 
-        path = "v4/raw/{}/{}/{}/{}".format(
-            timezone.now().strftime("%Y-%m-%d"), self.storage_hash, commit_sha, filename
-        )
+        path = f'v4/raw/{timezone.now().strftime("%Y-%m-%d")}/{self.storage_hash}/{commit_sha}/{filename}'
 
         if expires is None:
             expires = self.ttl

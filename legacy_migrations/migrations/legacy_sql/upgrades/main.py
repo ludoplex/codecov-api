@@ -39,13 +39,16 @@ def _version_normalize(version):
 
 def run_sql(schema_editor, current_version):
     normalized_current_version = _version_normalize(current_version)
-    upgrade_migration_index_to_start_from = None
-
-    for idx, (upgrade_version, _) in enumerate(UPGRADE_MIGRATIONS_BY_VERSION):
-        if upgrade_version > normalized_current_version:
-            upgrade_migration_index_to_start_from = idx
-            break
-
+    upgrade_migration_index_to_start_from = next(
+        (
+            idx
+            for idx, (upgrade_version, _) in enumerate(
+                UPGRADE_MIGRATIONS_BY_VERSION
+            )
+            if upgrade_version > normalized_current_version
+        ),
+        None,
+    )
     if not upgrade_migration_index_to_start_from:
         return
 

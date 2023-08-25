@@ -86,12 +86,11 @@ class ProfilingSummary:
             return []
         critical_files_paths = repo_yaml["profiling"]["critical_files_paths"]
         compiled_files_paths = [re.compile(path) for path in critical_files_paths]
-        user_defined_critical_files = [
+        return [
             file
             for file in report.files
             if any(map(lambda regex: regex.match(file), compiled_files_paths))
         ]
-        return user_defined_critical_files
 
     @cached_property
     def critical_files(self) -> List[CriticalFile]:
@@ -101,14 +100,13 @@ class ProfilingSummary:
             1. critical files from summary_data (e.g. actually detected by impact analysis)
             2. critical files that match paths defined in the user YAML
         """
-        profiling_commit = self.latest_profiling_commit()
-        if profiling_commit:
-            summary = self.summary_data(profiling_commit)
-            critical_files_from_profiling = set()
-            if summary:
+        if profiling_commit := self.latest_profiling_commit():
+            if summary := self.summary_data(profiling_commit):
                 critical_files_from_profiling = set(
                     summary.get_critical_files_filenames()
                 )
+            else:
+                critical_files_from_profiling = set()
             critical_files_from_yaml = set(
                 self._get_critical_files_from_yaml(profiling_commit)
             )
@@ -122,4 +120,4 @@ class ProfilingSummary:
 
     @cached_property
     def critical_filenames(self) -> set[str]:
-        return set([file.name for file in self.critical_files])
+        return {file.name for file in self.critical_files}

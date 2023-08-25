@@ -314,25 +314,25 @@ class TestPullRequestList(GraphQLTestHelper, TransactionTestCase):
             repository=self.repository,
             pullid=my_pull.pullid,
             commitid="11111",
-            timestamp=datetime.today() - timedelta(days=1),
+            timestamp=datetime.now() - timedelta(days=1),
         )
         CommitFactory(
             repository=self.repository,
             pullid=my_pull.pullid,
             commitid="22222",
-            timestamp=datetime.today() - timedelta(days=2),
+            timestamp=datetime.now() - timedelta(days=2),
         )
         CommitFactory(
             repository=self.repository,
             pullid=my_pull.pullid,
             commitid="33333",
-            timestamp=datetime.today() - timedelta(days=3),
+            timestamp=datetime.now() - timedelta(days=3),
         )
         CommitFactory(
             repository=self.repository,
             pullid=my_pull.pullid,
             commitid="44444",
-            timestamp=datetime.today() - timedelta(days=3),
+            timestamp=datetime.now() - timedelta(days=3),
             deleted=True,
         )
 

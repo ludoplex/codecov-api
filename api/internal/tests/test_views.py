@@ -91,7 +91,7 @@ class RepoPullList(InternalAPITest):
         self.assertEqual(
             len(content["results"]),
             3,
-            "got the wrong number of pulls: {}".format(content["results"]),
+            f'got the wrong number of pulls: {content["results"]}',
         )
 
     def test_get_pulls_no_permissions(self, mock_provider):
@@ -111,7 +111,7 @@ class RepoPullList(InternalAPITest):
         self.assertEqual(
             len(content["results"]),
             2,
-            "got the wrong number of open pulls: {}".format(content["results"]),
+            f'got the wrong number of open pulls: {content["results"]}',
         )
 
     def test_get_pulls_ordered_by_pullid(self, mock_provider):
@@ -146,7 +146,7 @@ class RepoPullList(InternalAPITest):
         response = self.client.get(reverse("pulls-list", kwargs=self.incorrect_kwargs))
         content = self.json_content(response)
         self.assertEqual(
-            response.status_code, 404, "got unexpected response: {}".format(content)
+            response.status_code, 404, f"got unexpected response: {content}"
         )
 
     def test_pulls_list_returns_most_recent_commiter(self, mock_provider):
@@ -194,7 +194,7 @@ class RepoPullList(InternalAPITest):
         assert response.status_code == status.HTTP_200_OK
         assert [p for p in response.data["results"] if p["pullid"] == 13][0][
             "head_totals"
-        ] == None
+        ] is None
 
     def test_get_pulls_no_base_commit_returns_null_for_base_totals(self, mock_provider):
         mock_provider.return_value = True, True
@@ -214,7 +214,7 @@ class RepoPullList(InternalAPITest):
         assert response.status_code == status.HTTP_200_OK
         assert [p for p in response.data["results"] if p["pullid"] == 13][0][
             "base_totals"
-        ] == None
+        ] is None
 
     def test_get_pulls_as_inactive_user_returns_403(self, mock_provider):
         self.org.plan = "users-inappm"
@@ -502,7 +502,7 @@ class RepoCommitList(InternalAPITest):
         self.assertEqual(
             len(content["results"]),
             2,
-            "got the wrong number of commits: {}".format(content["results"]),
+            f'got the wrong number of commits: {content["results"]}',
         )
         expected_result = {
             "count": 2,
@@ -590,7 +590,7 @@ class RepoCommitList(InternalAPITest):
         response = self.client.get("/internal/github/codecov/otherRepoName/commits/")
         content = self.json_content(response)
         self.assertEqual(
-            response.status_code, 404, "got unexpected response: {}".format(content)
+            response.status_code, 404, f"got unexpected response: {content}"
         )
 
     def test_filters_by_branch_name(self, mock_provider):

@@ -107,7 +107,7 @@ class ProfilingSummaryTests(TestCase):
 
     def test_summary_data_not_summarized(self):
         pc = ProfilingCommitFactory(repository=self.repo)
-        assert self.service.summary_data(pc) == None
+        assert self.service.summary_data(pc) is None
 
     @patch("services.archive.ArchiveService.read_file")
     def test_summary_data_not_found(self, read_file):
@@ -127,7 +127,7 @@ class ProfilingSummaryTests(TestCase):
             last_summarized_at=datetime.now(),
         )
 
-        assert self.service.summary_data(pc) == None
+        assert self.service.summary_data(pc) is None
 
     @patch("services.archive.ArchiveService.read_file")
     def test_summary_data(self, read_file):
@@ -202,7 +202,7 @@ class ProfilingSummaryTests(TestCase):
         )
         latest_profiling_commit.return_value = profiling_commit
         summary_data.return_value = None
-        mocked_useryaml.return_value = dict()
+        mocked_useryaml.return_value = {}
         critical_files_from_yaml = self.service._get_critical_files_from_yaml(
             profiling_commit
         )

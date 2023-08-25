@@ -61,10 +61,9 @@ class UploadSerializer(serializers.ModelSerializer):
             if "version" in validated_data.keys()
             else None
         )
-        upload = ReportSession.objects.create(**validated_data)
-        flags = []
-        if upload:
+        if upload := ReportSession.objects.create(**validated_data):
             repoid = upload.report.commit.repository.repoid
+            flags = []
             for individual_flag in flag_names:
                 existing_flag = RepositoryFlag.objects.filter(
                     repository_id=repoid, flag_name=individual_flag
@@ -122,11 +121,10 @@ class CommitSerializer(serializers.ModelSerializer):
         )
 
     def create(self, validated_data):
-        commit = Commit.objects.filter(
+        if commit := Commit.objects.filter(
             repository=validated_data.get("repository"),
             commitid=validated_data.get("commitid"),
-        ).first()
-        if commit:
+        ).first():
             return commit
         return super().create(validated_data)
 
@@ -144,11 +142,10 @@ class CommitReportSerializer(serializers.ModelSerializer):
         fields = read_only_fields + ("code",)
 
     def create(self, validated_data):
-        report = CommitReport.objects.filter(
+        if report := CommitReport.objects.filter(
             code=validated_data.get("code"),
             commit_id=validated_data.get("commit_id"),
-        ).first()
-        if report:
+        ).first():
             return report
         return super().create(validated_data)
 

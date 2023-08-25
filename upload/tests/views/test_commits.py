@@ -67,7 +67,7 @@ def test_commits_get(client, db):
     url = reverse("new_upload.commits", args=[repo.author.service, repo_slug])
     assert url == f"/upload/{repo.author.service}/{repo_slug}/commits"
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="token " + repo.upload_token)
+    client.credentials(HTTP_AUTHORIZATION=f"token {repo.upload_token}")
     res = client.get(url, format="json")
     assert res.status_code == 200
     content = res.json()
@@ -91,7 +91,7 @@ def test_commit_post_empty(db, client, mocker):
     repository = RepositoryFactory.create()
 
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="token " + repository.upload_token)
+    client.credentials(HTTP_AUTHORIZATION=f"token {repository.upload_token}")
     repo_slug = f"{repository.author.username}::::{repository.name}"
     url = reverse(
         "new_upload.commits",
@@ -132,7 +132,7 @@ def test_create_commit_already_exists(db, client, mocker):
     repository = RepositoryFactory.create()
     commit = CommitFactory(repository=repository, author=None)
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="token " + repository.upload_token)
+    client.credentials(HTTP_AUTHORIZATION=f"token {repository.upload_token}")
     repo_slug = f"{repository.author.username}::::{repository.name}"
     url = reverse(
         "new_upload.commits",

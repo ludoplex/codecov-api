@@ -5,6 +5,4 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 class ReportJSONEncoder(DjangoJSONEncoder):
     def default(self, obj):
-        if is_dataclass(obj):
-            return astuple(obj)
-        return super().default(self, obj)
+        return astuple(obj) if is_dataclass(obj) else super().default(self, obj)

@@ -88,11 +88,10 @@ class TokenlessAzureHandler(BaseTokenlessUploadHandler):
                 raise NotFound(
                     "Azure build has already finished. Please upload with the Codecov repository upload token to resolve issue."
                 )
-        else:
-            if build["status"].lower() != "inprogress":
-                raise NotFound(
-                    "Azure build has already finished. Please upload with the Codecov repository upload token to resolve issue."
-                )
+        elif build["status"].lower() != "inprogress":
+            raise NotFound(
+                "Azure build has already finished. Please upload with the Codecov repository upload token to resolve issue."
+            )
 
         # Check build ID
         build["buildNumber"] = build["buildNumber"].replace("+", " ")
@@ -129,8 +128,4 @@ class TokenlessAzureHandler(BaseTokenlessUploadHandler):
                 "Commit sha does not match Azure build. Please upload with the Codecov repository upload token to resolve issue."
             )
 
-        # Azure supports various repo types, ensure current repo type is supported on Codecov
-        service = self.check_repository_type(build["repository"]["type"])
-
-        # Validation step is complete, return repo type
-        return service
+        return self.check_repository_type(build["repository"]["type"])

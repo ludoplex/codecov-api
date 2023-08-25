@@ -18,7 +18,7 @@ class TokenlessTravisHandler(BaseTokenlessUploadHandler):
 
         try:
             build = requests.get(
-                "https://api.travis-ci.com/job/{}".format(self.upload_params["job"]),
+                f'https://api.travis-ci.com/job/{self.upload_params["job"]}',
                 headers={"Travis-API-Version": "3", "User-Agent": "Codecov"},
             )
             travis_dot_com = (
@@ -35,7 +35,6 @@ class TokenlessTravisHandler(BaseTokenlessUploadHandler):
                     owner=self.upload_params["owner"],
                 ),
             )
-            pass
         except Exception as e:
             log.warning(
                 f"Error {e}",
@@ -50,7 +49,7 @@ class TokenlessTravisHandler(BaseTokenlessUploadHandler):
         # if job not found in travis.com try travis.org
         if not travis_dot_com:
             log.info(
-                f"Unable to verify using travis.com, trying travis.org",
+                "Unable to verify using travis.com, trying travis.org",
                 extra=dict(
                     commit=self.upload_params["commit"],
                     repo_name=self.upload_params["repo"],
@@ -60,9 +59,7 @@ class TokenlessTravisHandler(BaseTokenlessUploadHandler):
             )
             try:
                 build = requests.get(
-                    "https://api.travis-ci.org/job/{}".format(
-                        self.upload_params["job"]
-                    ),
+                    f'https://api.travis-ci.org/job/{self.upload_params["job"]}',
                     headers={"Travis-API-Version": "3", "User-Agent": "Codecov"},
                 )
             except (ConnectionError, HTTPError) as e:
@@ -118,27 +115,11 @@ class TokenlessTravisHandler(BaseTokenlessUploadHandler):
             )
 
         # Verify job finished within the last 4 minutes or is still in progress
-        if job["finished_at"] != None:
-            finishTimestamp = job["finished_at"].replace("T", " ").replace("Z", "")
-            buildFinishDateObj = datetime.strptime(finishTimestamp, "%Y-%m-%d %H:%M:%S")
-            finishTimeWithBuffer = buildFinishDateObj + timedelta(minutes=4)
-            now = datetime.utcnow()
-            if not now <= finishTimeWithBuffer:
-                log.warning(
-                    f"Cancelling upload: 4 mins since build",
-                    extra=dict(
-                        commit=self.upload_params["commit"],
-                        repo_name=self.upload_params["repo"],
-                        job=self.upload_params["job"],
-                        owner=self.upload_params["owner"],
-                    ),
-                )
-                raise NotFound(errors["travis"]["tokenless-stale-build"])
-        else:
+        if job["finished_at"] is None:
             # check if current state is correct (i.e not finished)
             if job["state"] != "started":
                 log.warning(
-                    f"Cancelling upload: job state does not indicate that build is in progress",
+                    "Cancelling upload: job state does not indicate that build is in progress",
                     extra=dict(
                         commit=self.upload_params["commit"],
                         repo_name=self.upload_params["repo"],
@@ -148,8 +129,24 @@ class TokenlessTravisHandler(BaseTokenlessUploadHandler):
                 )
                 raise NotFound(errors["travis"]["tokenless-bad-status"])
 
+        else:
+            finishTimestamp = job["finished_at"].replace("T", " ").replace("Z", "")
+            buildFinishDateObj = datetime.strptime(finishTimestamp, "%Y-%m-%d %H:%M:%S")
+            finishTimeWithBuffer = buildFinishDateObj + timedelta(minutes=4)
+            now = datetime.utcnow()
+            if not now <= finishTimeWithBuffer:
+                log.warning(
+                    "Cancelling upload: 4 mins since build",
+                    extra=dict(
+                        commit=self.upload_params["commit"],
+                        repo_name=self.upload_params["repo"],
+                        job=self.upload_params["job"],
+                        owner=self.upload_params["owner"],
+                    ),
+                )
+                raise NotFound(errors["travis"]["tokenless-stale-build"])
         log.info(
-            f"Finished travis tokenless upload",
+            "Finished travis tokenless upload",
             extra=dict(
                 commit=self.upload_params["commit"],
                 repo_name=self.upload_params["repo"],

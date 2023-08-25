@@ -78,13 +78,11 @@ class TokenlessGithubActionsHandler(BaseTokenlessUploadHandler):
         if (
             build["public"] != True
             or build["slug"] != f"{owner}/{repo}"
-            or (
-                build["commit_sha"] != self.upload_params.get("commit")
-                and self.upload_params.get("pr") == None
-            )
+            or build["commit_sha"] != self.upload_params.get("commit")
+            and self.upload_params.get("pr") is None
         ):
             log.warning(
-                f"Repository slug or commit sha do not match Github actions arguments",
+                "Repository slug or commit sha do not match Github actions arguments",
                 extra=dict(
                     commit=self.upload_params.get("commit"),
                     repo_name=self.upload_params.get("repo"),

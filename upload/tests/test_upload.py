@@ -619,7 +619,7 @@ class UploadHandlerHelpersTest(TestCase):
             assert commit.branch == "test"
             assert commit.pullid == 123
             assert commit.merged == False
-            assert commit.parent_commit_id == None
+            assert commit.parent_commit_id is None
 
         with self.subTest("commit already in database"):
             G(
@@ -646,7 +646,7 @@ class UploadHandlerHelpersTest(TestCase):
             assert commit.state == "pending"
             assert commit.branch == "apples"
             assert commit.pullid == 456
-            assert commit.merged == None
+            assert commit.merged is None
             assert commit.parent_commit_id == "different_parent_commit"
 
         with self.subTest("parent provided"):
@@ -666,8 +666,8 @@ class UploadHandlerHelpersTest(TestCase):
             assert commit.repository == repo
             assert commit.state == "pending"
             assert commit.branch == "test"
-            assert commit.pullid == None
-            assert commit.merged == None
+            assert commit.pullid is None
+            assert commit.merged is None
             assert commit.parent_commit_id == parent.commitid
 
     def test_parse_request_headers(self):
@@ -766,7 +766,7 @@ class UploadHandlerHelpersTest(TestCase):
         repo = G(Repository, author=owner)
         commit = G(Commit, totals={"s": 151}, repository=repo)
         report = CommitReportFactory.create(commit=commit)
-        for i in range(151):
+        for _ in range(151):
             UploadFactory.create(report=report)
 
         with self.assertRaises(ValidationError) as err:
@@ -929,7 +929,7 @@ class UploadHandlerRouteTest(APITestCase):
     ):
         headers = headers or {}
         query_string = f"?{urlencode(query)}" if query else ""
-        url = "/upload/v2/" + query_string
+        url = f"/upload/v2/{query_string}"
         return self.client.post(url, data=data, content_type=content_type, **headers)
 
     def setUp(self):
@@ -1246,6 +1246,7 @@ class UploadHandlerRouteTest(APITestCase):
         mock_hash,
         mock_storage_put,
     ):
+
         class MockRepoProviderAdapter:
             async def get_commit(self, commit, token):
                 return {"message": "This is not a merge commit"}
@@ -1259,7 +1260,7 @@ class UploadHandlerRouteTest(APITestCase):
             )
         )
 
-        mock_storage_put.return_value = path + "?AWS=PARAMS"
+        mock_storage_put.return_value = f"{path}?AWS=PARAMS"
         mock_get_redis.return_value = MockRedis()
         mock_repo_provider_service.return_value = MockRepoProviderAdapter()
         mock_uuid4.return_value = (
@@ -1296,6 +1297,7 @@ class UploadHandlerRouteTest(APITestCase):
         mock_hash,
         mock_storage_put,
     ):
+
         class MockRepoProviderAdapter:
             async def get_commit(self, commit, token):
                 return {"message": "This is not a merge commit"}
@@ -1309,7 +1311,7 @@ class UploadHandlerRouteTest(APITestCase):
             )
         )
 
-        mock_storage_put.return_value = path + "?AWS=PARAMS"
+        mock_storage_put.return_value = f"{path}?AWS=PARAMS"
         mock_get_redis.return_value = MockRedis()
         mock_repo_provider_service.return_value = MockRepoProviderAdapter()
         mock_uuid4.return_value = (
@@ -1368,7 +1370,7 @@ class UploadHandlerRouteTest(APITestCase):
             )
         )
 
-        mock_storage_put.return_value = path + "?AWS=PARAMS"
+        mock_storage_put.return_value = f"{path}?AWS=PARAMS"
         mock_get_redis.return_value = MockRedis()
         mock_repo_provider_service.return_value = MockRepoProviderAdapter()
         mock_uuid4.return_value = (
@@ -1436,7 +1438,7 @@ class UploadHandlerRouteTest(APITestCase):
             )
         )
 
-        mock_storage_put.return_value = path + "?AWS=PARAMS"
+        mock_storage_put.return_value = f"{path}?AWS=PARAMS"
         mock_get_redis.return_value = MockRedis()
         mock_repo_provider_service.return_value = MockRepoProviderAdapter()
         mock_uuid4.return_value = (

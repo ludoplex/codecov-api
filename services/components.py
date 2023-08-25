@@ -27,8 +27,7 @@ def component_filtered_report(report: Report, component: Component) -> FilteredR
     Filter a report such that the totals, etc. are only pertaining to the given component.
     """
     flags = component.get_matching_flags(report.flags.keys())
-    filtered_report = report.filter(flags=flags, paths=component.paths)
-    return filtered_report
+    return report.filter(flags=flags, paths=component.paths)
 
 
 class ComponentComparison:

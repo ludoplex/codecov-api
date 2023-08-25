@@ -55,8 +55,7 @@ class LookaheadNode:
         for selection in selection_set.selections:
             if isinstance(selection, FragmentSpreadNode):
                 fragment = self.info.fragments[selection.name.value]
-                for selection in fragment.selection_set.selections:
-                    selections.append(selection)
+                selections.extend(iter(fragment.selection_set.selections))
             else:
                 selections.append(selection)
         return selections

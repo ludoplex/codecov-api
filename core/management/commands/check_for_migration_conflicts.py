@@ -16,7 +16,7 @@ class Command(BaseCommand):
                     if not migration.endswith(".py"):
                         continue
 
-                    prefix = migration[0:4]
+                    prefix = migration[:4]
                     migrations_by_prefix.setdefault(prefix, []).append(migration)
 
                 for prefix, grouped_migrations in migrations_by_prefix.items():
@@ -28,7 +28,6 @@ class Command(BaseCommand):
                         for grouped_migration in grouped_migrations:
                             print(grouped_migration)
                         print()
-            # It's expected to not find migration folders for Django/3rd party apps
             except FileNotFoundError:
                 pass
 

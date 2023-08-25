@@ -22,7 +22,7 @@ def test_simple_static_analysis_call_no_uploads_yet(db, mocker):
     )
     client = APIClient()
     url = reverse("staticanalyses-list")
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     some_uuid, second_uuid = uuid4(), uuid4()
     response = client.post(
         url,
@@ -86,7 +86,7 @@ def test_static_analysis_finish(db, mocker):
         repository=commit.repository, token_type="static_analysis"
     )
     client = APIClient()
-    client.credentials(HTTP_AUTHORIZATION="repotoken " + token.key)
+    client.credentials(HTTP_AUTHORIZATION=f"repotoken {token.key}")
     response = client.post(
         reverse("staticanalyses-finish", kwargs={"external_id": suite.external_id})
     )

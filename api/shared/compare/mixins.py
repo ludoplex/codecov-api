@@ -58,9 +58,10 @@ class CompareViewSetMixin(CompareSlugMixin, viewsets.GenericViewSet):
             elif comparison.pseudo_diff_adjusts_tracked_lines:
                 return Response(
                     data={
-                        "detail": f"Changes found in between %.7s...%.7s (pseudo...base) "
-                        f"which prevent comparing this pull request."
-                        % (comparison.pull.compared_to, comparison.pull.base)
+                        "detail": (
+                            'Changes found in between %.7s...%.7s (pseudo...base) which prevent comparing this pull request.'
+                            % (comparison.pull.compared_to, comparison.pull.base)
+                        )
                     },
                     status=400,
                 )

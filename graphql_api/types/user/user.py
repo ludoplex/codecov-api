@@ -11,10 +11,7 @@ user_bindable = ObjectType("User")
 
 @user_bindable.field("cannySSOToken")
 def resolve_canny_sso_token(user, info):
-    name = user.username
-    if user.name:
-        name = user.name
-
+    name = user.name if user.name else user.username
     user_data = {
         "avatarURL": user.avatar_url,
         "email": user.email,

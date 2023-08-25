@@ -38,7 +38,7 @@ class V1ValidateYamlHandler(APIView):
 
             if not isinstance(yaml_dict, dict):
                 log.warning(
-                    f"yaml_dict result from loading validate request body is not a dict",
+                    "yaml_dict result from loading validate request body is not a dict",
                     extra=dict(
                         yaml_dict=yaml_dict, request_body=str(self.request.body)
                     ),
@@ -91,7 +91,7 @@ class V2ValidateYamlHandler(V1ValidateYamlHandler):
             yaml_dict = safe_load(self.request.body)
             if not isinstance(yaml_dict, dict):
                 log.warning(
-                    f"yaml_dict result from loading validate request body is not a dict",
+                    "yaml_dict result from loading validate request body is not a dict",
                     extra=dict(
                         yaml_dict=yaml_dict, request_body=str(self.request.body)
                     ),

@@ -6,6 +6,5 @@ from codecov_auth.models import OrganizationLevelToken
 class GetOrgUploadToken(BaseInteractor):
     @sync_to_async
     def execute(self, owner):
-        org_token = OrganizationLevelToken.objects.filter(owner=owner).first()
-        if org_token:
+        if org_token := OrganizationLevelToken.objects.filter(owner=owner).first():
             return org_token.token

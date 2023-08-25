@@ -6,7 +6,7 @@ from core.models import Constants
 
 def health(request):
     version = Constants.objects.get(key="version")
-    return HttpResponse("%s is live!" % version.value)
+    return HttpResponse(f"{version.value} is live!")
 
 
 def redirect_app(request):

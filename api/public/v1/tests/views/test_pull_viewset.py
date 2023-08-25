@@ -42,19 +42,19 @@ class PullViewSetTests(APITestCase):
         }
 
     def test_get_pulls(self):
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.repo.upload_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.repo.upload_token}")
         response = self.client.get("/api/github/codecov/testRepoName/pulls/")
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content.decode())
         self.assertEqual(
             len(content["results"]),
             3,
-            "got the wrong number of pulls: {}".format(content["results"]),
+            f'got the wrong number of pulls: {content["results"]}',
         )
 
     def test_get_pulls_wrong_repo_token(self):
         self.client.credentials(
-            HTTP_AUTHORIZATION="Token " + self.other_repo.upload_token
+            HTTP_AUTHORIZATION=f"Token {self.other_repo.upload_token}"
         )
         response = self.client.get("/api/github/codecov/testRepoName/pulls/")
         self.assertEqual(response.status_code, 403)
@@ -64,7 +64,7 @@ class PullViewSetTests(APITestCase):
         self.assertEqual(response.status_code, 401)
 
     def test_get_pull(self):
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.repo.upload_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.repo.upload_token}")
         response = self.client.get("/api/github/codecov/testRepoName/pulls/10/")
         self.assertEqual(response.status_code, 200)
         content = json.loads(response.content.decode())
@@ -72,14 +72,14 @@ class PullViewSetTests(APITestCase):
 
     def test_get_pull_no_permissions(self):
         self.client.credentials(
-            HTTP_AUTHORIZATION="Token " + self.other_repo.upload_token
+            HTTP_AUTHORIZATION=f"Token {self.other_repo.upload_token}"
         )
         response = self.client.get("/api/github/codecov/testRepoName/pulls/10/")
         self.assertEqual(response.status_code, 403)
 
     @patch("services.task.TaskService.pulls_sync")
     def test_update_pull_user_provided_base(self, pulls_sync_mock):
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.repo.upload_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.repo.upload_token}")
         response = self.client.put(
             "/api/github/codecov/testRepoName/pulls/10/",
             {"user_provided_base_sha": "new-sha"},
@@ -95,7 +95,7 @@ class PullViewSetTests(APITestCase):
 
     def test_update_pull_user_provided_base_no_permissions(self):
         self.client.credentials(
-            HTTP_AUTHORIZATION="Token " + self.other_repo.upload_token
+            HTTP_AUTHORIZATION=f"Token {self.other_repo.upload_token}"
         )
         response = self.client.put(
             "/api/github/codecov/testRepoName/pulls/10/",
@@ -105,7 +105,7 @@ class PullViewSetTests(APITestCase):
 
     @patch("services.task.TaskService.pulls_sync")
     def test_create_new_pull_user_provided_base(self, pulls_sync_mock):
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.repo.upload_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.repo.upload_token}")
         self.client.force_login(user=self.user)
         response = self.client.put(
             "/api/github/codecov/testRepoName/pulls/15/",
@@ -122,7 +122,7 @@ class PullViewSetTests(APITestCase):
 
     @patch("services.task.TaskService.pulls_sync")
     def test_post_pull_user_provided_base(self, pulls_sync_mock):
-        self.client.credentials(HTTP_AUTHORIZATION="Token " + self.repo.upload_token)
+        self.client.credentials(HTTP_AUTHORIZATION=f"Token {self.repo.upload_token}")
         response = self.client.post(
             "/api/github/codecov/testRepoName/pulls/15/",
             {"user_provided_base_sha": "new-sha"},

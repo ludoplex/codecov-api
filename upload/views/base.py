@@ -29,16 +29,15 @@ class GetterMixin:
                 "Repository not found",
                 extra=dict(repo_slug=repo_slug),
             )
-            raise ValidationError(f"Repository not found")
+            raise ValidationError("Repository not found")
         return repository
 
     def get_commit(self, repo: Repository) -> Commit:
         commit_sha = self.kwargs.get("commit_sha")
         try:
-            commit = Commit.objects.get(
+            return Commit.objects.get(
                 commitid=commit_sha, repository__repoid=repo.repoid
             )
-            return commit
         except Commit.DoesNotExist:
             log.warning(
                 "Commit SHA not found",
@@ -51,11 +50,10 @@ class GetterMixin:
         if report_code == "default":
             report_code = None
         try:
-            report = CommitReport.objects.get(code=report_code, commit=commit)
-            return report
+            return CommitReport.objects.get(code=report_code, commit=commit)
         except CommitReport.DoesNotExist:
             log.warning(
                 "Report not found",
                 extra=dict(commit_sha=commit.commitid, report_code=report_code),
             )
-            raise ValidationError(f"Report not found")
+            raise ValidationError("Report not found")

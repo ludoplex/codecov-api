@@ -68,7 +68,7 @@ class RepoCommitsTests(TransactionTestCase):
 
     def test_deleted_commits(self):
         commits = repo_commits(self.repo_with_deleted_commits, None)
-        assert list(commits) == []
+        assert not list(commits)
 
     def test_branch_name_hide_failed_ci(self):
         commits = repo_commits(
@@ -87,7 +87,7 @@ class RepoCommitsTests(TransactionTestCase):
         assert list(commits) == [self.commits[0]]
 
     def test_short_sha(self):
-        commits = repo_commits(self.repo, {"search": self.commits[0].commitid[0:7]})
+        commits = repo_commits(self.repo, {"search": self.commits[0].commitid[:7]})
         assert list(commits) == [self.commits[0]]
 
     def test_message(self):

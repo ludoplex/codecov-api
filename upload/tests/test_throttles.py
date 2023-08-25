@@ -60,7 +60,7 @@ class ThrottlesUnitTests(APITestCase):
         first_report = CommitReportFactory(commit=first_commit)
         sec_report = CommitReportFactory(commit=second_commit)
 
-        for i in range(150):
+        for _ in range(150):
             UploadFactory(report=first_report)
             UploadFactory(report=sec_report)
 
@@ -89,12 +89,12 @@ class ThrottlesUnitTests(APITestCase):
         fourth_report = CommitReportFactory.create(commit=fourth_commit)
         self.request_should_not_throttle(third_commit)
 
-        for i in range(300):
+        for _ in range(300):
             UploadFactory.create(report__commit__repository=public_repository)
         # ensuring public repos counts don't count towards the quota
         self.request_should_not_throttle(third_commit)
 
-        for i in range(150):
+        for _ in range(150):
             UploadFactory.create(report=second_report)
             UploadFactory.create(report=fourth_report)
         # second and fourth commit already has uploads made, we won't block uploads to them
@@ -120,7 +120,7 @@ class ThrottlesUnitTests(APITestCase):
                 totals={"s": totals_column_count}, repository=repo
             )
             report = CommitReportFactory.create(commit=commit)
-            for i in range(rows_count):
+            for _ in range(rows_count):
                 UploadFactory.create(report=report)
 
             if should_raise:

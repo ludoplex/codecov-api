@@ -344,20 +344,13 @@ class Owner(models.Model):
     @property
     def avatar_url(self, size=DEFAULT_AVATAR_SIZE):
         if self.service == SERVICE_GITHUB and self.service_id:
-            return "{}/u/{}?v=3&s={}".format(
-                AVATAR_GITHUB_BASE_URL, self.service_id, size
-            )
+            return f"{AVATAR_GITHUB_BASE_URL}/u/{self.service_id}?v=3&s={size}"
 
         elif self.service == SERVICE_GITHUB_ENTERPRISE and self.service_id:
-            return "{}/avatars/u/{}?v=3&s={}".format(
-                get_config("github_enterprise", "url"), self.service_id, size
-            )
+            return f'{get_config("github_enterprise", "url")}/avatars/u/{self.service_id}?v=3&s={size}'
 
-        # Bitbucket
         elif self.service == SERVICE_BITBUCKET and self.username:
-            return "{}/account/{}/avatar/{}".format(
-                BITBUCKET_BASE_URL, self.username, size
-            )
+            return f"{BITBUCKET_BASE_URL}/account/{self.username}/avatar/{size}"
 
         elif (
             self.service == SERVICE_BITBUCKET_SERVER
@@ -365,43 +358,27 @@ class Owner(models.Model):
             and self.username
         ):
             if "U" in self.service_id:
-                return "{}/users/{}/avatar.png?s={}".format(
-                    get_config("bitbucket_server", "url"), self.username, size
-                )
+                return f'{get_config("bitbucket_server", "url")}/users/{self.username}/avatar.png?s={size}'
             else:
-                return "{}/projects/{}/avatar.png?s={}".format(
-                    get_config("bitbucket_server", "url"), self.username, size
-                )
+                return f'{get_config("bitbucket_server", "url")}/projects/{self.username}/avatar.png?s={size}'
 
-        # Gitlab
         elif self.service == SERVICE_GITLAB and self.email:
             return get_gitlab_url(self.email, size)
 
-        # Codecov config
         elif get_config("services", "gravatar") and self.email:
-            return "{}/avatar/{}?s={}".format(
-                GRAVATAR_BASE_URL, md5(self.email.lower().encode()).hexdigest(), size
-            )
+            return f"{GRAVATAR_BASE_URL}/avatar/{md5(self.email.lower().encode()).hexdigest()}?s={size}"
 
         elif get_config("services", "avatars.io") and self.email:
-            return "{}/avatar/{}/{}".format(
-                AVATARIO_BASE_URL, md5(self.email.lower().encode()).hexdigest(), size
-            )
+            return f"{AVATARIO_BASE_URL}/avatar/{md5(self.email.lower().encode()).hexdigest()}/{size}"
 
         elif self.ownerid:
-            return "{}/users/{}.png?size={}".format(
-                get_config("setup", "codecov_url"), self.ownerid, size
-            )
+            return f'{get_config("setup", "codecov_url")}/users/{self.ownerid}.png?size={size}'
 
         elif os.getenv("APP_ENV") == SERVICE_CODECOV_ENTERPRISE:
-            return "{}/media/images/gafsi/avatar.svg".format(
-                get_config("setup", "codecov_url")
-            )
+            return f'{get_config("setup", "codecov_url")}/media/images/gafsi/avatar.svg'
 
         else:
-            return "{}/media/images/gafsi/avatar.svg".format(
-                get_config("setup", "media", "assets")
-            )
+            return f'{get_config("setup", "media", "assets")}/media/images/gafsi/avatar.svg'
 
     @property
     def pretty_plan(self):

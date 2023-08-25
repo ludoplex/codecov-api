@@ -81,11 +81,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "codecov.wsgi.application"
 
-# Database
-# https://docs.djangoproject.com/en/2.1/ref/settings/#databases
-
-db_url = get_config("services", "database_url")
-if db_url:
+if db_url := get_config("services", "database_url"):
     db_conf = urlparse(db_url)
     DATABASE_USER = db_conf.username
     DATABASE_NAME = db_conf.path.replace("/", "")
@@ -105,8 +101,7 @@ DATABASE_READ_REPLICA_ENABLED = get_config(
     "setup", "database", "read_replica_enabled", default=False
 )
 
-db_read_url = get_config("services", "database_read_url")
-if db_read_url:
+if db_read_url := get_config("services", "database_read_url"):
     db_conf = urlparse(db_read_url)
     DATABASE_READ_USER = db_conf.username
     DATABASE_READ_NAME = db_conf.path.replace("/", "")
@@ -133,8 +128,9 @@ TIMESERIES_REAL_TIME_AGGREGATES = get_config(
     "setup", "timeseries", "real_time_aggregates", default=False
 )
 
-timeseries_database_url = get_config("services", "timeseries_database_url")
-if timeseries_database_url:
+if timeseries_database_url := get_config(
+    "services", "timeseries_database_url"
+):
     timeseries_database_conf = urlparse(timeseries_database_url)
     TIMESERIES_DATABASE_USER = timeseries_database_conf.username
     TIMESERIES_DATABASE_NAME = timeseries_database_conf.path.replace("/", "")
@@ -162,8 +158,9 @@ TIMESERIES_DATABASE_READ_REPLICA_ENABLED = get_config(
     "setup", "timeseries", "read_replica_enabled", default=False
 )
 
-timeseries_database_read_url = get_config("services", "timeseries_database_read_url")
-if timeseries_database_read_url:
+if timeseries_database_read_url := get_config(
+    "services", "timeseries_database_read_url"
+):
     timeseries_database_conf = urlparse(timeseries_database_read_url)
     TIMESERIES_DATABASE_READ_USER = timeseries_database_conf.username
     TIMESERIES_DATABASE_READ_NAME = timeseries_database_conf.path.replace("/", "")

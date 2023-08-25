@@ -45,7 +45,7 @@ class SelfHostedTestCase(TestCase):
         owner3 = OwnerFactory(service="gitlab", username="foo")
 
         owners = admin_owners()
-        assert list(owners) == []
+        assert not list(owners)
 
     @patch("services.self_hosted.admin_owners")
     def test_is_admin_owner(self, admin_owners):

@@ -45,7 +45,7 @@ if __name__ == "__main__":
         if sys.argv[1] == "migrate" and get_config(
             "setup", "timeseries", "enabled", default=False
         ):
-            print(f"Running timeseries migrations")
+            print("Running timeseries migrations")
             sys.argv += ["--database=timeseries", "timeseries"]
             execute_from_command_line(sys.argv)
     else:

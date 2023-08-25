@@ -34,7 +34,7 @@ class BitbucketServerLoginView(View, LoginMixin):
         whoami_url = f"{settings.BITBUCKET_SERVER_URL}/plugins/servlet/applinks/whoami"
         username = await repo_service.api("GET", whoami_url)
         # https://developer.atlassian.com/static/rest/bitbucket-server/4.0.1/bitbucket-rest.html#idp2649152
-        user = await repo_service.api("GET", "/users/%s" % username)
+        user = await repo_service.api("GET", f"/users/{username}")
 
         authenticated_user = {
             "key": token["key"],
@@ -109,7 +109,7 @@ class BitbucketServerLoginView(View, LoginMixin):
         )
         # Get the access token from the request token
         # The access token can be stored and reused.
-        response = redirect(settings.CODECOV_DASHBOARD_URL + "/bbs")
+        response = redirect(f"{settings.CODECOV_DASHBOARD_URL}/bbs")
         response.delete_cookie("_oauth_request_token", domain=settings.COOKIES_DOMAIN)
         access_token_url = (
             f"{settings.BITBUCKET_SERVER_URL}/plugins/servlet/oauth/access-token"
@@ -145,4 +145,4 @@ class BitbucketServerLoginView(View, LoginMixin):
                 return await self.redirect_to_bitbucket_server_step(request)
         except TorngitServerFailureError:
             log.warning("Bitbucket Server not available for login")
-            return redirect(settings.CODECOV_DASHBOARD_URL + "/bbs")
+            return redirect(f"{settings.CODECOV_DASHBOARD_URL}/bbs")

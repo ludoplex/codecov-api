@@ -70,6 +70,4 @@ class TokenlessAppveyorHandler(BaseTokenlessUploadHandler):
                 "Build already finished, unable to accept new reports. Please upload with the Codecov repository upload token to resolve issue."
             )
 
-        service = self.check_repository_type(build["project"]["repositoryType"])
-
-        return service
+        return self.check_repository_type(build["project"]["repositoryType"])
